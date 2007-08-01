@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'hoe'
-load './bin/flog'
+require './lib/flog'
 
 Hoe.new('flog', Flog::VERSION) do |p|
   p.rubyforge_name = 'seattlerb'
