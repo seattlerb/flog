@@ -1,5 +1,10 @@
+== 1.0.1 / 2007-08-01
+
+* 1 bug fix:
+  * New Rule: NEVER release new software when exhausted: Fixed dependency list. 
+
 == 1.0.0 / 2007-08-01
 
-* 1 major enhancement
+* 1 major enhancement:
   * Birthday!
 
