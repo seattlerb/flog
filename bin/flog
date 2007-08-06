@@ -1,6 +1,10 @@
-#!/usr/local/bin/ruby -w
+#!/usr/local/bin/ruby -ws
+
+$a ||= false
 
 require 'flog'
+
+ARGV.push "-" if ARGV.empty?
 
 flogger = Flog.new
 flogger.process_files ARGV

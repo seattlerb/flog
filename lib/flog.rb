@@ -3,21 +3,42 @@ require 'parse_tree'
 require 'sexp_processor'
 require 'unified_ruby'
 
+if defined? $I and String === $I then
+  $I.split(/:/).each do |dir|
+    $: << dir
+  end
+end
+
 class Flog < SexpProcessor
-  VERSION = '1.0.2'
+  VERSION = '1.1.0'
 
   include UnifiedRuby
 
-  THRESHOLD = 0.60
+  THRESHOLD = $a ? 1.0 : 0.60
 
   SCORES = Hash.new(1)
 
+  # various non-call constructs
+  OTHER_SCORES = {
+    :alias => 2,
+    :assignment => 1,
+    :branch => 1,
+    :lit_fixnum => 0.25,
+    :sclass => 5,
+    :super => 1,
+    :to_proc_normal => 5,
+    :to_proc_wtf? => 10,
+    :yield => 1,
+  }
+
+  # eval forms
   SCORES.merge!(:define_method => 5,
                 :eval => 5,
                 :module_eval => 5,
                 :class_eval => 5,
                 :instance_eval => 5)
 
+  # various "magic" usually used for "clever code"
   SCORES.merge!(:alias_method => 2,
                 :include => 2,
                 :extend => 2,
@@ -37,6 +58,9 @@ class Flog < SexpProcessor
                 :public_method_defined? => 2,
                 :remove_method => 2,
                 :undef_method => 2)
+
+  # calls I don't like and usually see being abused
+  SCORES.merge!(:inject => 2)
 
   @@no_class = :none
   @@no_method = :none
@@ -63,7 +87,11 @@ class Flog < SexpProcessor
   end
 
   def report
-    total_score = @totals.values.inject(0) { |sum,n| sum + n }
+    total_score = 0
+    @totals.values.each do |n|
+      total_score += n
+    end
+
     max = total_score * THRESHOLD
     current = 0
 
@@ -72,9 +100,9 @@ class Flog < SexpProcessor
 
     @calls.sort_by { |k,v| -@totals[k] }.each do |klass_method, calls|
       total = @totals[klass_method]
-      puts "%s: (%d)" % [klass_method, total]
+      puts "%s: (%.1f)" % [klass_method, total]
       calls.sort_by { |k,v| -v }.each do |call, count|
-        puts "  %4d: %s" % [count, call]
+        puts "  %6.1f: %s" % [count, call]
       end
 
       current += total
@@ -85,23 +113,197 @@ class Flog < SexpProcessor
   end
 
   def add_to_score(name, score)
-    @totals["#{@klass_name}##{@method_name}"] += score * @multiplier
-    @calls["#{@klass_name}##{@method_name}"][name] += score * @multiplier
+#     case name
+#     when :assignment then
+#     when :branch then
+#     else
+      @totals["#{@klass_name}##{@method_name}"] += score * @multiplier
+      @calls["#{@klass_name}##{@method_name}"][name] += score * @multiplier
+#     end
   end
 
   def bad_dog! bonus
     @multiplier += bonus
-    yield
+    yield 42
     @multiplier -= bonus
+  end
+
+  def bleed exp
+    process exp.shift until exp.empty?
   end
 
   ############################################################
   # Process Methods:
 
+  # when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn then
+  #   a += 1
+  # when :and, :case, :else, :if, :iter, :or, :rescue, :until, :when, :while then
+  #   b += 1
+  # when :call, :fcall, :super, :vcall, :yield then
+  #   c += 1
+
+  def process_attrasgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    process exp.shift # lhs
+    exp.shift # name
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_attrset(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    raise exp.inspect
+    s()
+  end
+
+  def process_dasgn_curr(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    exp.shift # name
+    process exp.shift # assigment, if any
+    s()
+  end
+
+  def process_iasgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    exp.shift # name
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_lasgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    exp.shift # name
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_masgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    process exp.shift # lhs
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_and(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # lhs
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_case(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # recv
+    bleed exp
+    s()
+  end
+
+  def process_else(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    bleed exp
+    s()
+  end
+
+  def process_if(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # cond
+    process exp.shift # true
+    process exp.shift # false
+    s()
+  end
+
+  def process_or(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # lhs
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_rescue(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    bleed exp
+    s()
+  end
+
+  def process_until(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # cond
+    process exp.shift # body
+    exp.shift # pre/post
+    s()
+  end
+
+  def process_when(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    bleed exp
+    s()
+  end
+
+  def process_while(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # cond
+    process exp.shift # body
+    exp.shift # pre/post
+    s()
+  end
+
+  def process_super(exp)
+    add_to_score :super, OTHER_SCORES[:super]
+    bleed exp
+    s()
+  end
+
+  def process_yield(exp)
+    add_to_score :yield, OTHER_SCORES[:yield]
+    bleed exp
+    s()
+  end
+
+  # klasses.each do |klass|
+  #   klass.shift # :class
+  #   klassname = klass.shift
+  #   klass.shift # superclass
+  #   methods = klass
+
+  #   methods.each do |defn|
+  #     a=b=c=0
+  #     defn.shift
+  #     methodname = defn.shift
+  #     tokens = defn.structure.flatten
+  #     tokens.each do |token|
+  #       case token
+  #       end
+  #     end
+  #     key = ["#{klassname}.#{methodname}", a, b, c]
+  #     val = Math.sqrt(a*a+b*b+c*c)
+  #     score[key] = val
+  #   end
+  # end
+
+  ############################################################
+
   def process_alias(exp)
     process exp.shift
     process exp.shift
-    add_to_score :alias, 2
+    add_to_score :alias, OTHER_SCORES[:alias]
+    s()
+  end
+
+  def process_block(exp)
+    bad_dog! 0.1 do
+      bleed exp
+    end
+    s()
+  end
+
+  def process_iter(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+
+    process exp.shift # no penalty for LHS
+
+    bad_dog! 0.1 do
+      bleed exp
+    end
     s()
   end
 
@@ -112,9 +314,9 @@ class Flog < SexpProcessor
 
     case arg.first
     when :iter then
-      add_to_score :to_proc_iter_wtf?, 6
+      add_to_score :to_proc_iter_wtf?, OTHER_SCORES[:to_proc_wtf?]
     when :lit, :call, :iter then
-      add_to_score :to_proc, 3
+      add_to_score :to_proc_normal, OTHER_SCORES[:to_proc_normal]
     when :lvar, :dvar, :ivar, :nil then
       # do nothing
     else
@@ -145,16 +347,14 @@ class Flog < SexpProcessor
     bad_dog! 1.0 do
       supr = process exp.shift
     end
-    until exp.empty?
-      process exp.shift
-    end
+    bleed exp
     @klass_name = @@no_class
     s()
   end
 
   def process_defn(exp)
     @method_name = exp.shift
-    process exp.shift until exp.empty?
+    bleed exp
     @method_name = @@no_method
     s()
   end
@@ -162,7 +362,7 @@ class Flog < SexpProcessor
   def process_defs(exp)
     process exp.shift
     @method_name = exp.shift
-    process exp.shift until exp.empty?
+    bleed exp
     @method_name = @@no_method
     s()
   end
@@ -173,7 +373,7 @@ class Flog < SexpProcessor
     when 0, -1 then
       # ignore those because they're used as array indicies instead of first/last
     when Integer then
-      add_to_score :lit_fixnum, 0.25
+      add_to_score :lit_fixnum, OTHER_SCORES[:lit_fixnum]
     when Float, Symbol, Regexp, Range then
       # do nothing
     else
@@ -184,9 +384,7 @@ class Flog < SexpProcessor
 
   def process_module(exp)
     @klass_name = exp.shift
-    until exp.empty?
-      process exp.shift
-    end
+    bleed exp
     @klass_name = @@no_class
     s()
   end
@@ -194,10 +392,11 @@ class Flog < SexpProcessor
   def process_sclass(exp)
     bad_dog! 0.5 do
       recv = process exp.shift
-      process exp.shift until exp.empty?
+      bleed exp
     end
 
-    add_to_score :sclass, 5
+    add_to_score :sclass, OTHER_SCORES[:sclass]
     s()
   end
 end
+
