@@ -78,7 +78,7 @@ class Flog < SexpProcessor
     @calls = Hash.new { |h,k| h[k] = Hash.new 0 }
   end
 
-  def process_files *files
+  def flog_files *files
     files.flatten.each do |file|
       next unless File.file? file or file == "-"
       ruby = file == "-" ? $stdin.read : File.read(file)
@@ -86,6 +86,28 @@ class Flog < SexpProcessor
       process Sexp.from_array(sexp).first
     end
   end
+
+  # TODO: maybe
+  # klasses.each do |klass|
+  #   klass.shift # :class
+  #   klassname = klass.shift
+  #   klass.shift # superclass
+  #   methods = klass
+
+  #   methods.each do |defn|
+  #     a=b=c=0
+  #     defn.shift
+  #     methodname = defn.shift
+  #     tokens = defn.structure.flatten
+  #     tokens.each do |token|
+  #       case token
+  #       end
+  #     end
+  #     key = ["#{klassname}.#{methodname}", a, b, c]
+  #     val = Math.sqrt(a*a+b*b+c*c)
+  #     score[key] = val
+  #   end
+  # end
 
   def report
     total_score = 0
@@ -95,6 +117,11 @@ class Flog < SexpProcessor
 
     max = total_score * THRESHOLD
     current = 0
+
+    if $s then
+      puts total_score
+      exit 0
+    end
 
     puts "Total score = #{total_score}"
     puts
@@ -143,6 +170,20 @@ class Flog < SexpProcessor
   # when :call, :fcall, :super, :vcall, :yield then
   #   c += 1
 
+  def process_alias(exp)
+    process exp.shift
+    process exp.shift
+    add_to_score :alias, OTHER_SCORES[:alias]
+    s()
+  end
+
+  def process_and(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # lhs
+    process exp.shift # rhs
+    s()
+  end
+
   def process_attrasgn(exp)
     add_to_score :assignment, OTHER_SCORES[:assignment]
     process exp.shift # lhs
@@ -157,168 +198,10 @@ class Flog < SexpProcessor
     s()
   end
 
-  def process_dasgn_curr(exp)
-    add_to_score :assignment, OTHER_SCORES[:assignment]
-    exp.shift # name
-    process exp.shift # assigment, if any
-    s()
-  end
-
-  def process_iasgn(exp)
-    add_to_score :assignment, OTHER_SCORES[:assignment]
-    exp.shift # name
-    process exp.shift # rhs
-    s()
-  end
-
-  def process_lasgn(exp)
-    add_to_score :assignment, OTHER_SCORES[:assignment]
-    exp.shift # name
-    process exp.shift # rhs
-    s()
-  end
-
-  def process_masgn(exp)
-    add_to_score :assignment, OTHER_SCORES[:assignment]
-    process exp.shift # lhs
-    process exp.shift # rhs
-    s()
-  end
-
-  def process_and(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # lhs
-    process exp.shift # rhs
-    s()
-  end
-
-  def process_case(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # recv
-    bleed exp
-    s()
-  end
-
-  def process_else(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bleed exp
-    s()
-  end
-
-  def process_if(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # cond
-    process exp.shift # true
-    process exp.shift # false
-    s()
-  end
-
-  def process_or(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # lhs
-    process exp.shift # rhs
-    s()
-  end
-
-  def process_rescue(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bleed exp
-    s()
-  end
-
-  def process_until(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # cond
-    process exp.shift # body
-    exp.shift # pre/post
-    s()
-  end
-
-  def process_when(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bleed exp
-    s()
-  end
-
-  def process_while(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # cond
-    process exp.shift # body
-    exp.shift # pre/post
-    s()
-  end
-
-  def process_super(exp)
-    add_to_score :super, OTHER_SCORES[:super]
-    bleed exp
-    s()
-  end
-
-  def process_yield(exp)
-    add_to_score :yield, OTHER_SCORES[:yield]
-    bleed exp
-    s()
-  end
-
-  # klasses.each do |klass|
-  #   klass.shift # :class
-  #   klassname = klass.shift
-  #   klass.shift # superclass
-  #   methods = klass
-
-  #   methods.each do |defn|
-  #     a=b=c=0
-  #     defn.shift
-  #     methodname = defn.shift
-  #     tokens = defn.structure.flatten
-  #     tokens.each do |token|
-  #       case token
-  #       end
-  #     end
-  #     key = ["#{klassname}.#{methodname}", a, b, c]
-  #     val = Math.sqrt(a*a+b*b+c*c)
-  #     score[key] = val
-  #   end
-  # end
-
-  ############################################################
-
-  def process_alias(exp)
-    process exp.shift
-    process exp.shift
-    add_to_score :alias, OTHER_SCORES[:alias]
-    s()
-  end
-
   def process_block(exp)
     bad_dog! 0.1 do
       bleed exp
     end
-    s()
-  end
-
-  def process_iter(exp)
-    if self.context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
-      recv = exp.first
-
-      if recv[0] == :call and recv[1] == nil and recv.arglist[1][0] == :lit then
-        msg = recv[2]
-        submsg = recv.arglist[1][1]
-        @klass_name, @method_name = msg, submsg
-        bleed exp
-        @klass_name, @method_name = @@no_class, @@no_method
-        return s()
-      end
-    end
-
-    add_to_score :branch, OTHER_SCORES[:branch]
-
-    process exp.shift # no penalty for LHS
-
-    bad_dog! 0.1 do
-      bleed exp
-    end
-
     s()
   end
 
@@ -357,6 +240,13 @@ class Flog < SexpProcessor
     s()
   end
 
+  def process_case(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # recv
+    bleed exp
+    s()
+  end
+
   def process_class(exp)
     @klass_name = exp.shift
     bad_dog! 1.0 do
@@ -364,6 +254,13 @@ class Flog < SexpProcessor
     end
     bleed exp
     @klass_name = @@no_class
+    s()
+  end
+
+  def process_dasgn_curr(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    exp.shift # name
+    process exp.shift # assigment, if any
     s()
   end
 
@@ -382,6 +279,59 @@ class Flog < SexpProcessor
     s()
   end
 
+  def process_else(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    bleed exp
+    s()
+  end
+
+  def process_iasgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    exp.shift # name
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_if(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # cond
+    process exp.shift # true
+    process exp.shift # false
+    s()
+  end
+
+  def process_iter(exp)
+    if self.context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
+      recv = exp.first
+
+      if recv[0] == :call and recv[1] == nil and recv.arglist[1][0] == :lit then
+        msg = recv[2]
+        submsg = recv.arglist[1][1]
+        @klass_name, @method_name = msg, submsg
+        bleed exp
+        @klass_name, @method_name = @@no_class, @@no_method
+        return s()
+      end
+    end
+
+    add_to_score :branch, OTHER_SCORES[:branch]
+
+    process exp.shift # no penalty for LHS
+
+    bad_dog! 0.1 do
+      bleed exp
+    end
+
+    s()
+  end
+
+  def process_lasgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    exp.shift # name
+    process exp.shift # rhs
+    s()
+  end
+
   def process_lit(exp)
     value = exp.shift
     case value
@@ -397,10 +347,30 @@ class Flog < SexpProcessor
     s()
   end
 
+  def process_masgn(exp)
+    add_to_score :assignment, OTHER_SCORES[:assignment]
+    process exp.shift # lhs
+    process exp.shift # rhs
+    s()
+  end
+
   def process_module(exp)
     @klass_name = exp.shift
     bleed exp
     @klass_name = @@no_class
+    s()
+  end
+
+  def process_or(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # lhs
+    process exp.shift # rhs
+    s()
+  end
+
+  def process_rescue(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    bleed exp
     s()
   end
 
@@ -411,6 +381,40 @@ class Flog < SexpProcessor
     end
 
     add_to_score :sclass, OTHER_SCORES[:sclass]
+    s()
+  end
+
+  def process_super(exp)
+    add_to_score :super, OTHER_SCORES[:super]
+    bleed exp
+    s()
+  end
+
+  def process_until(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # cond
+    process exp.shift # body
+    exp.shift # pre/post
+    s()
+  end
+
+  def process_when(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    bleed exp
+    s()
+  end
+
+  def process_while(exp)
+    add_to_score :branch, OTHER_SCORES[:branch]
+    process exp.shift # cond
+    process exp.shift # body
+    exp.shift # pre/post
+    s()
+  end
+
+  def process_yield(exp)
+    add_to_score :yield, OTHER_SCORES[:yield]
+    bleed exp
     s()
   end
 end
