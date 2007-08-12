@@ -40,8 +40,8 @@ class Flog < SexpProcessor
 
   # various "magic" usually used for "clever code"
   SCORES.merge!(:alias_method => 2,
-                :include => 2,
                 :extend => 2,
+                :include => 2,
                 :instance_method => 2,
                 :instance_methods => 2,
                 :method_added => 2,
@@ -57,6 +57,7 @@ class Flog < SexpProcessor
                 :public_instance_methods => 2,
                 :public_method_defined? => 2,
                 :remove_method => 2,
+                :send => 3,
                 :undef_method => 2)
 
   # calls I don't like and usually see being abused
@@ -82,7 +83,7 @@ class Flog < SexpProcessor
       next unless File.file? file or file == "-"
       ruby = file == "-" ? $stdin.read : File.read(file)
       sexp = @pt.parse_tree_for_string(ruby, file)
-      process Sexp.from_array(sexp)
+      process Sexp.from_array(sexp).first
     end
   end
 
@@ -297,6 +298,21 @@ class Flog < SexpProcessor
   end
 
   def process_iter(exp)
+    if self.context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
+      recv = exp.first
+
+      if recv[0] == :call and recv[1] == nil and recv.arglist[1][0] == :lit then
+        msg = recv[2]
+        submsg = recv.arglist[1][1]
+        @klass_name, @method_name = msg, submsg
+        bleed exp
+        @klass_name, @method_name = @@no_class, @@no_method
+        return s()
+      end
+    else
+      puts self.context.inspect
+    end
+
     add_to_score :branch, OTHER_SCORES[:branch]
 
     process exp.shift # no penalty for LHS
@@ -304,6 +320,7 @@ class Flog < SexpProcessor
     bad_dog! 0.1 do
       bleed exp
     end
+
     s()
   end
 
