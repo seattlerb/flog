@@ -309,8 +309,6 @@ class Flog < SexpProcessor
         @klass_name, @method_name = @@no_class, @@no_method
         return s()
       end
-    else
-      puts self.context.inspect
     end
 
     add_to_score :branch, OTHER_SCORES[:branch]
