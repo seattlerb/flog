@@ -188,6 +188,7 @@ class Flog < SexpProcessor
     add_to_score :assignment, OTHER_SCORES[:assignment]
     process exp.shift # lhs
     exp.shift # name
+p exp.first
     process exp.shift # rhs
     s()
   end
@@ -304,7 +305,7 @@ class Flog < SexpProcessor
     if self.context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
       recv = exp.first
 
-      if recv[0] == :call and recv[1] == nil and recv.arglist[1][0] == :lit then
+      if recv[0] == :call and recv[1] == nil and recv.arglist[1] and recv.arglist[1][0] == :lit then
         msg = recv[2]
         submsg = recv.arglist[1][1]
         @klass_name, @method_name = msg, submsg
