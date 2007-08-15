@@ -188,7 +188,6 @@ class Flog < SexpProcessor
     add_to_score :assignment, OTHER_SCORES[:assignment]
     process exp.shift # lhs
     exp.shift # name
-p exp.first
     process exp.shift # rhs
     s()
   end
@@ -419,4 +418,3 @@ p exp.first
     s()
   end
 end
-
