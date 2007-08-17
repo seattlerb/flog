@@ -1,8 +1,5 @@
 #!/usr/local/bin/ruby -ws
 
-$a ||= false
-$s ||= false
-
 require 'flog'
 
 ARGV.push "-" if ARGV.empty?

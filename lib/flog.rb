@@ -3,10 +3,19 @@ require 'parse_tree'
 require 'sexp_processor'
 require 'unified_ruby'
 
+$a ||= false
+$s ||= false
+$v ||= false
+
 if defined? $I and String === $I then
   $I.split(/:/).each do |dir|
     $: << dir
   end
+end
+
+if defined? $h then
+  puts "usage... TODO"
+  exit 1
 end
 
 class Flog < SexpProcessor
@@ -63,7 +72,7 @@ class Flog < SexpProcessor
   # calls I don't like and usually see being abused
   SCORES.merge!(:inject => 2)
 
-  @@no_class = :none
+  @@no_class = :main
   @@no_method = :none
 
   def initialize
@@ -72,18 +81,24 @@ class Flog < SexpProcessor
     @klass_name, @method_name = @@no_class, @@no_method
     self.auto_shift_type = true
     self.require_empty = false # HACK
+    self.reset
+  end
+
+  def reset
     @totals = Hash.new 0
     @multiplier = 1.0
-
     @calls = Hash.new { |h,k| h[k] = Hash.new 0 }
   end
 
   def flog_files *files
     files.flatten.each do |file|
-      next unless File.file? file or file == "-"
-      ruby = file == "-" ? $stdin.read : File.read(file)
-      sexp = @pt.parse_tree_for_string(ruby, file)
-      process Sexp.from_array(sexp).first
+      if File.directory? file then
+        flog_files Dir["#{file}/**/*.rb"]
+      else
+        ruby = file == "-" ? $stdin.read : File.read(file)
+        sexp = @pt.parse_tree_for_string(ruby, file)
+        process Sexp.from_array(sexp).first
+      end
     end
   end
 
@@ -109,12 +124,17 @@ class Flog < SexpProcessor
   #   end
   # end
 
-  def report
+  def total
     total_score = 0
     @totals.values.each do |n|
       total_score += n
     end
+    total_score
+  end
 
+  def report
+
+    total_score = self.total
     max = total_score * THRESHOLD
     current = 0
 
@@ -138,6 +158,8 @@ class Flog < SexpProcessor
     end
   rescue
     # do nothing
+  ensure
+    self.reset
   end
 
   def add_to_score(name, score)
@@ -179,8 +201,10 @@ class Flog < SexpProcessor
 
   def process_and(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # lhs
-    process exp.shift # rhs
+    bad_dog! 0.1 do
+      process exp.shift # lhs
+      process exp.shift # rhs
+    end
     s()
   end
 
@@ -243,7 +267,9 @@ class Flog < SexpProcessor
   def process_case(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
     process exp.shift # recv
-    bleed exp
+    bad_dog! 0.1 do
+      bleed exp
+    end
     s()
   end
 
@@ -281,7 +307,9 @@ class Flog < SexpProcessor
 
   def process_else(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    bleed exp
+    bad_dog! 0.1 do
+      bleed exp
+    end
     s()
   end
 
@@ -295,16 +323,18 @@ class Flog < SexpProcessor
   def process_if(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
     process exp.shift # cond
-    process exp.shift # true
-    process exp.shift # false
+    bad_dog! 0.1 do
+      process exp.shift # true
+      process exp.shift # false
+    end
     s()
   end
 
   def process_iter(exp)
-    if self.context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
+    context = (self.context - [:class, :module, :scope])
+    if context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
       recv = exp.first
-
-      if recv[0] == :call and recv[1] == nil and recv.arglist[1] and recv.arglist[1][0] == :lit then
+      if recv[0] == :call and recv[1] == nil and recv.arglist[1] and [:lit, :str].include? recv.arglist[1][0] then
         msg = recv[2]
         submsg = recv.arglist[1][1]
         @klass_name, @method_name = msg, submsg
@@ -363,14 +393,18 @@ class Flog < SexpProcessor
 
   def process_or(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # lhs
-    process exp.shift # rhs
+    bad_dog! 0.1 do
+      process exp.shift # lhs
+      process exp.shift # rhs
+    end
     s()
   end
 
   def process_rescue(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    bleed exp
+    bad_dog! 0.1 do
+      bleed exp
+    end
     s()
   end
 
@@ -392,22 +426,28 @@ class Flog < SexpProcessor
 
   def process_until(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # cond
-    process exp.shift # body
+    bad_dog! 0.1 do
+      process exp.shift # cond
+      process exp.shift # body
+    end
     exp.shift # pre/post
     s()
   end
 
   def process_when(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    bleed exp
+    bad_dog! 0.1 do
+      bleed exp
+    end
     s()
   end
 
   def process_while(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
-    process exp.shift # cond
-    process exp.shift # body
+    bad_dog! 0.1 do
+      process exp.shift # cond
+      process exp.shift # body
+    end
     exp.shift # pre/post
     s()
   end
