@@ -24,8 +24,8 @@ class Flog < SexpProcessor
   include UnifiedRuby
 
   THRESHOLD = $a ? 1.0 : 0.60
-
   SCORES = Hash.new(1)
+  BRANCHING = [ :and, :case, :else, :if, :or, :rescue, :until, :when, :while ]
 
   # various non-call constructs
   OTHER_SCORES = {
@@ -36,7 +36,7 @@ class Flog < SexpProcessor
     :sclass => 5,
     :super => 1,
     :to_proc_normal => 5,
-    :to_proc_wtf? => 10,
+    :to_proc_icky! => 10,
     :yield => 1,
   }
 
@@ -75,13 +75,36 @@ class Flog < SexpProcessor
   @@no_class = :main
   @@no_method = :none
 
+  attr_reader :totals, :calls
+
   def initialize
     super
     @pt = ParseTree.new(false)
-    @klass_name, @method_name = @@no_class, @@no_method
+    @klasses = []
+    @methods = []
     self.auto_shift_type = true
     self.require_empty = false # HACK
     self.reset
+  end
+
+  def klass name
+    @klasses.unshift name
+    yield
+    @klasses.shift
+  end
+
+  def method name
+    @methods.unshift name
+    yield
+    @methods.shift
+  end
+
+  def klass_name
+    @klasses.first || @@no_class
+  end
+
+  def method_name
+    @methods.first || @@no_method
   end
 
   def reset
@@ -95,9 +118,19 @@ class Flog < SexpProcessor
       if File.directory? file then
         flog_files Dir["#{file}/**/*.rb"]
       else
+        warn "** flogging #{file}" if $v
         ruby = file == "-" ? $stdin.read : File.read(file)
-        sexp = @pt.parse_tree_for_string(ruby, file)
-        process Sexp.from_array(sexp).first
+        begin
+          sexp = @pt.parse_tree_for_string(ruby, file)
+          process Sexp.from_array(sexp).first
+        rescue SyntaxError => e
+          if e.inspect =~ /<%|%>/ then
+            warn e.inspect + " at " + e.backtrace.first(5).join(', ')
+            warn "...stupid lemmings and their bad erb templates... skipping"
+          else
+            raise e
+          end
+        end
       end
     end
   end
@@ -132,25 +165,24 @@ class Flog < SexpProcessor
     total_score
   end
 
-  def report
-
+  def report io = $stdout
     total_score = self.total
     max = total_score * THRESHOLD
     current = 0
 
     if $s then
-      puts total_score
+      io.puts total_score
       exit 0
     end
 
-    puts "Total score = #{total_score}"
-    puts
+    io.puts "Total score = #{total_score}"
+    io.puts
 
     @calls.sort_by { |k,v| -@totals[k] }.each do |klass_method, calls|
       total = @totals[klass_method]
-      puts "%s: (%.1f)" % [klass_method, total]
+      io.puts "%s: (%.1f)" % [klass_method, total]
       calls.sort_by { |k,v| -v }.each do |call, count|
-        puts "  %6.1f: %s" % [count, call]
+        io.puts "  %6.1f: %s" % [count, call]
       end
 
       current += total
@@ -167,8 +199,8 @@ class Flog < SexpProcessor
 #     when :assignment then
 #     when :branch then
 #     else
-      @totals["#{@klass_name}##{@method_name}"] += score * @multiplier
-      @calls["#{@klass_name}##{@method_name}"][name] += score * @multiplier
+      @totals["#{self.klass_name}##{self.method_name}"] += score * @multiplier
+      @calls["#{self.klass_name}##{self.method_name}"][name] += score * @multiplier
 #     end
   end
 
@@ -235,17 +267,19 @@ class Flog < SexpProcessor
     call = exp.shift
 
     case arg.first
-    when :iter then
-      add_to_score :to_proc_iter_wtf?, OTHER_SCORES[:to_proc_wtf?]
-    when :lit, :call, :iter then
-      add_to_score :to_proc_normal, OTHER_SCORES[:to_proc_normal]
-    when :lvar, :dvar, :ivar, :nil then
+    when :lvar, :dvar, :ivar, :cvar, :self, :const, :nil then
       # do nothing
+    when :lit, :call then
+      add_to_score :to_proc_normal, OTHER_SCORES[:to_proc_normal]
+    when :iter, *BRANCHING then
+      add_to_score :to_proc_icky!, OTHER_SCORES[:to_proc_icky!]
     else
-      raise({:block_pass => [call, arg]}.inspect)
+      raise({:block_pass => [arg, call]}.inspect)
     end
 
-    call = process call
+    process arg
+    process call
+
     s()
   end
 
@@ -274,12 +308,12 @@ class Flog < SexpProcessor
   end
 
   def process_class(exp)
-    @klass_name = exp.shift
-    bad_dog! 1.0 do
-      supr = process exp.shift
+    self.klass exp.shift do
+      bad_dog! 1.0 do
+        supr = process exp.shift
+      end
+      bleed exp
     end
-    bleed exp
-    @klass_name = @@no_class
     s()
   end
 
@@ -291,17 +325,17 @@ class Flog < SexpProcessor
   end
 
   def process_defn(exp)
-    @method_name = exp.shift
-    bleed exp
-    @method_name = @@no_method
+    self.method exp.shift do
+      bleed exp
+    end
     s()
   end
 
   def process_defs(exp)
     process exp.shift
-    @method_name = exp.shift
-    bleed exp
-    @method_name = @@no_method
+    self.method exp.shift do
+      bleed exp
+    end
     s()
   end
 
@@ -337,9 +371,11 @@ class Flog < SexpProcessor
       if recv[0] == :call and recv[1] == nil and recv.arglist[1] and [:lit, :str].include? recv.arglist[1][0] then
         msg = recv[2]
         submsg = recv.arglist[1][1]
-        @klass_name, @method_name = msg, submsg
-        bleed exp
-        @klass_name, @method_name = @@no_class, @@no_method
+        self.method submsg do
+          self.klass msg do
+            bleed exp
+          end
+        end
         return s()
       end
     end
@@ -385,9 +421,9 @@ class Flog < SexpProcessor
   end
 
   def process_module(exp)
-    @klass_name = exp.shift
-    bleed exp
-    @klass_name = @@no_class
+    self.klass exp.shift do
+      bleed exp
+    end
     s()
   end
 
