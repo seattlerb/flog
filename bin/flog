@@ -4,6 +4,22 @@ require 'flog'
 
 ARGV.push "-" if ARGV.empty?
 
+if defined? $h then
+  puts "#{File.basename $0} options dirs_or_files"
+  puts "  -a      display all flog results, not top 60%"
+  puts "  -h      display help"
+  puts "  -I=path extend $LOAD_PATH with path"
+  puts "  -s      display total score only"
+  puts "  -v      verbosely display progress and errors"
+  exit 0
+end
+
+if defined? $I and String === $I then
+  $I.split(/:/).each do |dir|
+    $: << dir
+  end
+end
+
 flogger = Flog.new
 flogger.flog_files ARGV
 flogger.report

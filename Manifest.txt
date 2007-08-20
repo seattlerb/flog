@@ -4,3 +4,5 @@ README.txt
 Rakefile
 bin/flog
 lib/flog.rb
+unpack.rb
+update_scores.rb

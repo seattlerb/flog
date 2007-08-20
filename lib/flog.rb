@@ -7,17 +7,6 @@ $a ||= false
 $s ||= false
 $v ||= false
 
-if defined? $I and String === $I then
-  $I.split(/:/).each do |dir|
-    $: << dir
-  end
-end
-
-if defined? $h then
-  puts "usage... TODO"
-  exit 1
-end
-
 class Flog < SexpProcessor
   VERSION = '1.1.0'
 
@@ -31,12 +20,13 @@ class Flog < SexpProcessor
   OTHER_SCORES = {
     :alias => 2,
     :assignment => 1,
+    :block => 1,
     :branch => 1,
     :lit_fixnum => 0.25,
     :sclass => 5,
     :super => 1,
-    :to_proc_normal => 5,
     :to_proc_icky! => 10,
+    :to_proc_normal => 5,
     :yield => 1,
   }
 
@@ -75,7 +65,7 @@ class Flog < SexpProcessor
   @@no_class = :main
   @@no_method = :none
 
-  attr_reader :totals, :calls
+  attr_reader :calls
 
   def initialize
     super
@@ -87,30 +77,18 @@ class Flog < SexpProcessor
     self.reset
   end
 
-  def klass name
-    @klasses.unshift name
-    yield
-    @klasses.shift
+  def add_to_score(name, score)
+    @calls["#{self.klass_name}##{self.method_name}"][name] += score * @multiplier
   end
 
-  def method name
-    @methods.unshift name
-    yield
-    @methods.shift
+  def bad_dog! bonus
+    @multiplier += bonus
+    yield 42
+    @multiplier -= bonus
   end
 
-  def klass_name
-    @klasses.first || @@no_class
-  end
-
-  def method_name
-    @methods.first || @@no_method
-  end
-
-  def reset
-    @totals = Hash.new 0
-    @multiplier = 1.0
-    @calls = Hash.new { |h,k| h[k] = Hash.new 0 }
+  def bleed exp
+    process exp.shift until exp.empty?
   end
 
   def flog_files *files
@@ -135,40 +113,31 @@ class Flog < SexpProcessor
     end
   end
 
-  # TODO: maybe
-  # klasses.each do |klass|
-  #   klass.shift # :class
-  #   klassname = klass.shift
-  #   klass.shift # superclass
-  #   methods = klass
+  def klass name
+    @klasses.unshift name
+    yield
+    @klasses.shift
+  end
 
-  #   methods.each do |defn|
-  #     a=b=c=0
-  #     defn.shift
-  #     methodname = defn.shift
-  #     tokens = defn.structure.flatten
-  #     tokens.each do |token|
-  #       case token
-  #       end
-  #     end
-  #     key = ["#{klassname}.#{methodname}", a, b, c]
-  #     val = Math.sqrt(a*a+b*b+c*c)
-  #     score[key] = val
-  #   end
-  # end
+  def klass_name
+    @klasses.first || @@no_class
+  end
 
-  def total
-    total_score = 0
-    @totals.values.each do |n|
-      total_score += n
-    end
-    total_score
+  def method name
+    @methods.unshift name
+    yield
+    @methods.shift
+  end
+
+  def method_name
+    @methods.first || @@no_method
   end
 
   def report io = $stdout
+    current = 0
     total_score = self.total
     max = total_score * THRESHOLD
-    current = 0
+    totals = self.totals
 
     if $s then
       io.puts total_score
@@ -178,8 +147,8 @@ class Flog < SexpProcessor
     io.puts "Total score = #{total_score}"
     io.puts
 
-    @calls.sort_by { |k,v| -@totals[k] }.each do |klass_method, calls|
-      total = @totals[klass_method]
+    @calls.sort_by { |k,v| -totals[k] }.each do |klass_method, calls|
+      total = totals[klass_method]
       io.puts "%s: (%.1f)" % [klass_method, total]
       calls.sort_by { |k,v| -v }.each do |call, count|
         io.puts "  %6.1f: %s" % [count, call]
@@ -188,41 +157,45 @@ class Flog < SexpProcessor
       current += total
       break if current >= max
     end
-  rescue
-    # do nothing
   ensure
     self.reset
   end
 
-  def add_to_score(name, score)
-#     case name
-#     when :assignment then
-#     when :branch then
-#     else
-      @totals["#{self.klass_name}##{self.method_name}"] += score * @multiplier
-      @calls["#{self.klass_name}##{self.method_name}"][name] += score * @multiplier
-#     end
+  def reset
+    @totals = @total_score = nil
+    @multiplier = 1.0
+    @calls = Hash.new { |h,k| h[k] = Hash.new 0 }
   end
 
-  def bad_dog! bonus
-    @multiplier += bonus
-    yield 42
-    @multiplier -= bonus
+  def total
+    self.totals unless @total_score # calculates total_score as well
+
+    @total_score
   end
 
-  def bleed exp
-    process exp.shift until exp.empty?
+  def totals
+    unless @totals then
+      @total_score = 0
+      @totals = Hash.new(0)
+      self.calls.each do |meth, tally|
+        a, b, c = 0, 0, 0
+        tally.each do |cat, score|
+          case cat
+          when :assignment then a += score
+          when :branch     then b += score
+          else                  c += score
+          end
+        end
+        score = Math.sqrt(a*a + b*b + c*c)
+        @totals[meth] = score
+        @total_score += score
+      end
+    end
+    @totals
   end
 
   ############################################################
   # Process Methods:
-
-  # when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn then
-  #   a += 1
-  # when :and, :case, :else, :if, :iter, :or, :rescue, :until, :when, :while then
-  #   b += 1
-  # when :call, :fcall, :super, :vcall, :yield then
-  #   c += 1
 
   def process_alias(exp)
     process exp.shift
@@ -265,6 +238,8 @@ class Flog < SexpProcessor
   def process_block_pass(exp)
     arg = exp.shift
     call = exp.shift
+
+    add_to_score :block_pass, OTHER_SCORES[:block]
 
     case arg.first
     when :lvar, :dvar, :ivar, :cvar, :self, :const, :nil then
