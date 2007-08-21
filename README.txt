@@ -1,6 +1,6 @@
 flog
     by Ryan Davis, Seattle.rb
-    http://seattlerb.rubyforge.org/
+    http://ruby.sadi.st/
     http://rubyforge.org/projects/seattlerb
 
 == DESCRIPTION:
