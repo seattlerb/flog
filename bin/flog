@@ -10,6 +10,7 @@ if defined? $h then
   puts "  -h      display help"
   puts "  -I=path extend $LOAD_PATH with path"
   puts "  -s      display total score only"
+  puts "  -m      skip code outside of methods"
   puts "  -v      verbosely display progress and errors"
   exit 0
 end

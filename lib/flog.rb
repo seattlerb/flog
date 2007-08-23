@@ -3,12 +3,13 @@ require 'parse_tree'
 require 'sexp_processor'
 require 'unified_ruby'
 
-$a ||= false
-$s ||= false
-$v ||= false
+$a ||= false # report all methods, not just 60%
+$m ||= false # real methods only (no global scope)
+$s ||= false # summary only
+$v ||= false # verbose, print methods as processed
 
 class Flog < SexpProcessor
-  VERSION = '1.1.0'
+  VERSION = '1.2.0'
 
   include UnifiedRuby
 
@@ -139,15 +140,13 @@ class Flog < SexpProcessor
     max = total_score * THRESHOLD
     totals = self.totals
 
-    if $s then
-      io.puts total_score
-      exit 0
-    end
-
-    io.puts "Total score = #{total_score}"
+    io.puts "Total Flog = %.1f (%.1f flog / method)" % [total_score, self.average]
     io.puts
 
+    exit 0 if $s
+
     @calls.sort_by { |k,v| -totals[k] }.each do |klass_method, calls|
+      next if $m and klass_method =~ /##{@@no_method}/
       total = totals[klass_method]
       io.puts "%s: (%.1f)" % [klass_method, total]
       calls.sort_by { |k,v| -v }.each do |call, count|
@@ -173,11 +172,16 @@ class Flog < SexpProcessor
     @total_score
   end
 
+  def average
+    self.total / self.calls.size
+  end
+
   def totals
     unless @totals then
       @total_score = 0
       @totals = Hash.new(0)
       self.calls.each do |meth, tally|
+        next if $m and meth =~ /##{@@no_method}$/
         a, b, c = 0, 0, 0
         tally.each do |cat, score|
           case cat

@@ -1,3 +1,8 @@
+== 1.2.0 /
+
+  * Added -m to only report code in methods (skips #none).
+  * Added avg score per method to report.
+
 == 1.1.0 / 2007-08-21
 
 * 3 major enhancements:

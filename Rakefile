@@ -11,7 +11,7 @@ Hoe.new('flog', Flog::VERSION) do |p|
   p.url = p.paragraphs_of('README.txt', 0).first.split(/\n/)[2..-1].map {|u| u.strip }
   p.changes = p.paragraphs_of('History.txt', 1).join("\n\n")
 
-  p.extra_deps << ["ParseTree", '>= 2.0.0']
+  p.extra_deps << ["ParseTree", '>= 2.0.1']
 end
 
 # vim: syntax=Ruby
