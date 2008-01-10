@@ -2,6 +2,9 @@
 
 require 'rubygems'
 require 'hoe'
+
+$: << '../../ParseTree/dev/lib' << '../../RubyInline/dev/lib'
+
 require './lib/flog'
 
 Hoe.new('flog', Flog::VERSION) do |p|
