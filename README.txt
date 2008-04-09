@@ -1,7 +1,7 @@
-flog
-    by Ryan Davis, Seattle.rb
-    http://ruby.sadi.st/
-    http://rubyforge.org/projects/seattlerb
+= flog
+
+* http://ruby.sadi.st/
+* http://rubyforge.org/projects/seattlerb
 
 == DESCRIPTION:
 
@@ -25,7 +25,7 @@ report. The higher the score, the more pain the code is in.
 == REQUIREMENTS:
 
 * ruby2ruby
-* parse_tree
+* ParseTree
 
 == INSTALL:
 

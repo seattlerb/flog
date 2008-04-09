@@ -1,15 +1,21 @@
-== 1.2.0 /
+=== 1.2.0 /
+
+* 3 minor enhancements:
 
   * Added -m to only report code in methods (skips #none).
   * Added avg score per method to report.
+  * Added -n to skip method details... pussies should learn grep.
 
-== 1.1.0 / 2007-08-21
+=== 1.1.0 / 2007-08-21
 
 * 3 major enhancements:
+
   * Added assignments and branches and a lot of other stuff. rad.
   * Added process_iter section for DSL style blocks (rake tasks etc).
   * Made Flog usable as a library.
+
 * 12 minor enhancements:
+
   * Added -a flag to turn off threshold culling for other tools.
   * Added -s for summarizing the score.
   * Added -v feedback to know what file you're flogging.
@@ -22,23 +28,27 @@
   * Added unpack.rb and update_scores.rb at base level (not installed)
   * Added scoring for block_pass.
   * Converted totals to use distance formula on ABC's.
+
 * 3 bug fixes:
+
   * Ran flog on every latest gem available. Found a bunch of problems.
   * Use a stack for both class/module and method accounting.
   * block_args weren't processing the arg
 
-== 1.0.2 / 2007-08-01
+=== 1.0.2 / 2007-08-01
 
 * 1 bug fix:
+
   * stupid rubygems bin wrapper... *sigh*
 
-== 1.0.1 / 2007-08-01
+=== 1.0.1 / 2007-08-01
 
 * 1 bug fix:
+
   * New Rule: NEVER release new software when exhausted: Fixed dependency list. 
 
-== 1.0.0 / 2007-08-01
+=== 1.0.0 / 2007-08-01
 
 * 1 major enhancement:
-  * Birthday!
 
+  * Birthday!
