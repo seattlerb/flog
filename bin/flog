@@ -2,16 +2,20 @@
 
 require 'flog'
 
+# In case this is being called on the end of a pipe:
 ARGV.push "-" if ARGV.empty?
 
 if defined? $h then
   puts "#{File.basename $0} options dirs_or_files"
   puts "  -a      display all flog results, not top 60%"
+  puts "  -c      continue despite syntax errors"
   puts "  -h      display help"
   puts "  -I=path extend $LOAD_PATH with path"
-  puts "  -s      display total score only"
   puts "  -m      skip code outside of methods"
+  puts "  -n      no method details in report"
+  puts "  -s      display total score only"
   puts "  -v      verbosely display progress and errors"
+  puts "  -q      quiet, don't show method breakdowns"
   exit 0
 end
 
