@@ -1,96 +1,33 @@
-#!/usr/local/bin/ruby -ws
+#!/usr/bin/env ruby -ws
 
-$: << 'lib'
-$: << '../../ParseTree/dev/lib'
+# Update the flog scores for a specific set of gems.
+
+$: << 'lib' << '../../ParseTree/dev/lib'
+$:.unshift File.expand_path("~/Work/svn/rubygems/lib")
+
+require 'yaml'
 require 'flog'
-require 'rubygems/source_info_cache'
+require 'gem_updater'
 
 $u ||= false
 $f ||= false
 
-$score_file = '../dev/scores.yml'
-$misc_error = [-1]
-$syntax_error = [-2]
-$no_methods = ["", -3]
-$no_gem = [-4]
+$score_file   = '../dev/scores.yml'
+$misc_error   = {:total => -1, :average => -1, :methods => {}}
+$syntax_error = {:total => -2, :average => -2, :methods => {}}
+$no_gem       = {:total => -4, :average => -4, :methods => {}}
 
-max = (ARGV.shift || 10).to_i
+max    = (ARGV.shift || 10).to_i
 
 scores = YAML.load(File.read($score_file)) rescue {}
 
-["ruby-aes-table1-1.0.gem",
- "ruby-aes-unroll1-1.0.gem",
- "hpricot-scrub-0.2.0.gem",
- "extract_curves-0.0.1.gem",
- "rfeedparser-ictv-0.9.931.gem",
- "spec_unit-0.0.1.gem"].each do|p|
-  scores[p] = $no_gem.dup
-end
-
-Dir.mkdir "../gems" unless File.directory? "../gems"
-
-if $u then
-  puts "updating mirror"
-
-  Dir.chdir "../gems" do
-    cache = Gem::SourceInfoCache.cache_data['http://gems.rubyforge.org']
-
-    gems = Dir["*.gem"]
-    old = gems - cache.source_index.latest_specs.values.map { |spec|
-      "#{spec.full_name}.gem"
-    }
-
-    puts "deleting #{old.size} gems"
-    old.each do |gem|
-      scores.delete gem
-      File.unlink gem
-    end
-
-    new = cache.source_index.latest_specs.map { |name, spec|
-      "#{spec.full_name}.gem"
-    } - gems
-
-    puts "fetching #{new.size} gems"
-    new.each do |gem|
-      next if scores[gem] == $no_gem unless $f # FIX
-      unless system "wget http://gems.rubyforge.org/gems/#{gem}" then
-        scores[gem] = $no_gem
-      end
-    end
-  end
-end
-
-my_projects = Regexp.union("InlineFortran", "ParseTree", "RubyInline", "ZenTest", "bfts", "box_layout", "flog", "heckle", "image_science", "miniunit", "png", "ruby2ruby", "vlad", "zentest", "ZenHacks", "rubyforge", "RubyToC", "hoe")
-
-$owners = {}
-cache = Marshal.load(File.read(Gem::SourceInfoCache.new.cache_file))
-cache['http://gems.rubyforge.org'].source_index.latest_specs.map { |name, spec|
-  owner = spec.authors.compact
-  owner = Array(spec.email) if owner.empty?
-  owner.map! { |o| o.sub(/\s*[^ \w@.].*$/, '') }
-  owner = ["NOT Ryan Davis"] if owner.include? "Ryan Davis" and name !~ my_projects
-
-  # because we screwed these up back before hoe
-  owner << "Eric Hodel" if name =~ /bfts|RubyToC|ParseTree|heckle/
-
-  $owners["#{spec.full_name}.gem"] = owner.uniq
-}
-
-def score_for dir
-  files = `find #{dir} -name \\*.rb | grep -v gen.*templ`.split(/\n/)
-
-  flogger = Flog.new
-  flogger.flog_files files
-  methods = flogger.totals.reject { |k,v| k =~ /\#none$/ }.sort_by { |k,v| v }
-  methods = [$no_methods.dup] if methods.empty?
-  [flogger.total] + methods
-rescue SyntaxError => e
-  warn e.inspect + " at " + e.backtrace.first(5).join(', ') if $v
-  $syntax_error.dup
-rescue => e
-  warn e.inspect + " at " + e.backtrace.first(5).join(', ') if $v
-  $misc_error.dup
-end
+##
+# Save the scores in $score_file.
+#--
+# Creates a new file, then renames to overwrite the old one.
+# Wouldn't it be better to copy the old one, then create a new
+# one so you can do a diff?
+#++
 
 def save_scores scores
   File.open("#{$score_file}.new", 'w') do |f|
@@ -100,28 +37,79 @@ def save_scores scores
   File.rename "#{$score_file}.new", $score_file
 end
 
+GemUpdater::stupid_gems.each do|p|
+  scores[p] = $no_gem.dup
+end
+
+GemUpdater::initialize_dir
+
+if $u then
+  GemUpdater.update_gem_tarballs
+  exit 1
+end
+
+my_projects = Regexp.union("InlineFortran", "ParseTree", "RubyInline",
+                           "RubyToC", "ZenHacks", "ZenTest", "bfts",
+                           "box_layout", "flog", "heckle", "hoe",
+                           "image_science", "miniunit", "png", "ruby2ruby",
+                           "rubyforge", "vlad", "zentest")
+
+$owners = {}
+
+GemUpdater.get_latest_gems.each do |spec|
+  name  = spec.name
+  owner = spec.authors.compact
+  owner = Array(spec.email) if owner.empty?
+  owner.map! { |o| o.sub(/\s*[^ \w@.].*$/, '') }
+  owner = ["NOT Ryan Davis"] if owner.include? "Ryan Davis" and name !~ my_projects
+
+  # because we screwed these up back before hoe
+  owner << "Eric Hodel" if name =~ /bfts|RubyToC|ParseTree|heckle/
+
+  $owners["#{spec.full_name}.tgz"] = owner.uniq || 'omg I have no idea'
+end
+
+def score_for dir
+  files = `find #{dir} -name \\*.rb | grep -v gen.*templ`.split(/\n/)
+
+  flogger = Flog.new
+  flogger.flog_files files
+  methods = flogger.totals.reject { |k,v| k =~ /\#none$/ }
+  {
+    :total => flogger.total,
+    :size => methods.size,
+    :average => flogger.average,
+    :stddev => flogger.stddev,
+    :methods => methods
+  }
+rescue SyntaxError => e
+  warn e.inspect + " at " + e.backtrace.first(5).join(', ') if $v
+  $syntax_error.dup
+rescue => e
+  warn e.inspect + " at " + e.backtrace.first(5).join(', ') if $v
+  $misc_error.dup
+end
+
+# extract all the gems and process the data for them.
 begin
   dirty = false
   Dir.chdir "../gems" do
-    Dir["*.gem"].each_with_index do |gem, i|
+    Dir["*.tgz"].each_with_index do |gem, i|
       project = File.basename gem
-      next if scores.has_key? project unless $f and scores[project][0] < 0
+      next if scores.has_key? project unless $f and scores[project][:total] < 0
       dirty = true
       begin
         warn gem
-        dir = gem.sub(/\.gem$/, '')
-        Dir.mkdir dir
+        dir = gem.sub(/\.tgz$/, '')
+
+        system "tar -zmxf #{gem} 2> /dev/null"
+
         Dir.chdir dir do
-          system "(tar -Oxf ../#{gem} data.tar.gz | tar zxf -) 2> /dev/null"
           system "chmod -R a+r ."
           scores[project] = score_for(File.directory?('lib') ? 'lib' : '.')
         end
       ensure
         system "rm -rf #{dir}"
-      end
-
-      if i % 500 == 0 then
-        save_scores scores
       end
     end
   end
@@ -129,7 +117,13 @@ ensure
   save_scores scores if dirty
 end
 
-scores.reject! { |k,v| v.first.nil? or Fixnum === v.last or v.last.last < 0 }
+scores.reject! { |k,v| v[:total].nil? or v[:methods].empty? }
+
+class Hash
+  def sorted_methods
+    self[:methods].sort_by { |k,v| -v }
+  end
+end
 
 class Array
   def sum
@@ -170,13 +164,13 @@ def report title, data
   end
 end
 
-project_numbers = scores.map { |k,v| [k, v[1..-1].map {|_,n| n}.flatten] }
+project_numbers = scores.map { |k,v| [k, v[:methods].map {|_,n| n}.flatten] }
 project_stats   = project_numbers.map { |k,v| [k, v.size, v.average, v.stddev] }
 
 title "Statistics" do
-  flog_numbers = scores.map { |k,v| v.first }
-  all_scores = scores.map { |k,v| v[1..-1].map { |_,n| n } }.flatten
-  method_counts = project_stats.map { |n,c,a,s| c }
+  flog_numbers = scores.map { |k,v| v[:total] }
+  all_scores = scores.map { |k,v| v[:methods].values }.flatten
+  method_counts = scores.map { |k,v| v[:size] }
 
   puts "total # gems      : %8d" % scores.size
   puts "total # methods   : %8d" % all_scores.size
@@ -194,14 +188,27 @@ def report_worst section, data
   end
 end
 
-worst = scores.sort_by { |k,v| -v.first }.first(max)
+worst = scores.sort_by { |k,v| -v[:total] }.first(max)
 report_worst "Worst Projects EVAR", worst do |project, score|
-  [score.first, project, $owners[project].join(', ')]
+  owner = $owners[project].join(', ') rescue nil
+  raise "#{project} seems not to have an owner" if owner.nil?
+  [score[:total], project, owner]
 end
 
-worst = scores.sort_by { |k,v| -v.last.last }.first(max)
-report_worst "Worst Methods EVAR", worst do |project, methods|
-  [methods.last.last, project, methods.last.first]
+worst = {}
+scores.each do |long_name, spec|
+  name = long_name.sub(/-(\d+\.)*\d+\.gem$/, '')
+  spec[:methods].each do |method_name, score|
+    worst[[name, method_name]] = score
+  end
+end
+
+worst = worst.sort_by { |_,v| -v }.first(max)
+
+max_size = worst.map { |(name, meth), score| name.size }.max
+title "Worth Methods EVAR"
+worst.each_with_index do |((name, meth), score), i|
+  puts "%3d: %9.2f: %-#{max_size}s %s" % [i + 1, score, name, meth]
 end
 
 report "Methods per Gem", project_stats.sort_by { |n, c, a, sd| -c }.first(max)
@@ -212,7 +219,7 @@ $projects_per_owner = Hash.new { |h,k| h[k] = {} }
 $owners.each do |project, owners|
   next unless scores.has_key? project # bad project
   owners.each do |owner|
-    score = scores[project].first || 10000
+    score = scores[project][:total] || 1000000
     $projects_per_owner[owner][project] = score
     $score_per_owner[owner] += score
   end
@@ -234,5 +241,5 @@ report_bad_people "Top Flog Scores per Developer" do
 end
 
 report_bad_people "Most Prolific Developers" do |k,v|
-  $projects_per_owner.sort_by { |k,v| -v.size }.first(max)
+  $projects_per_owner.sort_by { |k,v| [-v.size, -$score_per_owner[k]] }.first(max)
 end
