@@ -263,6 +263,7 @@ class Flog < SexpProcessor
     end
     s()
   end
+  alias :process_or :process_and
 
   def process_attrasgn(exp)
     add_to_score :assignment, OTHER_SCORES[:assignment]
@@ -348,6 +349,8 @@ class Flog < SexpProcessor
     process exp.shift # assigment, if any
     s()
   end
+  alias :process_iasgn :process_dasgn_curr
+  alias :process_lasgn :process_dasgn_curr
 
   def process_defn(exp)
     self.method exp.shift do
@@ -371,13 +374,8 @@ class Flog < SexpProcessor
     end
     s()
   end
-
-  def process_iasgn(exp)
-    add_to_score :assignment, OTHER_SCORES[:assignment]
-    exp.shift # name
-    process exp.shift # rhs
-    s()
-  end
+  alias :process_rescue :process_else
+  alias :process_when   :process_else
 
   def process_if(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
@@ -416,13 +414,6 @@ class Flog < SexpProcessor
     s()
   end
 
-  def process_lasgn(exp)
-    add_to_score :assignment, OTHER_SCORES[:assignment]
-    exp.shift # name
-    process exp.shift # rhs
-    s()
-  end
-
   def process_lit(exp)
     value = exp.shift
     case value
@@ -452,23 +443,6 @@ class Flog < SexpProcessor
     s()
   end
 
-  def process_or(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bad_dog! 0.1 do
-      process exp.shift # lhs
-      process exp.shift # rhs
-    end
-    s()
-  end
-
-  def process_rescue(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bad_dog! 0.1 do
-      bleed exp
-    end
-    s()
-  end
-
   def process_sclass(exp)
     bad_dog! 0.5 do
       recv = process exp.shift
@@ -485,24 +459,6 @@ class Flog < SexpProcessor
     s()
   end
 
-  def process_until(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bad_dog! 0.1 do
-      process exp.shift # cond
-      process exp.shift # body
-    end
-    exp.shift # pre/post
-    s()
-  end
-
-  def process_when(exp)
-    add_to_score :branch, OTHER_SCORES[:branch]
-    bad_dog! 0.1 do
-      bleed exp
-    end
-    s()
-  end
-
   def process_while(exp)
     add_to_score :branch, OTHER_SCORES[:branch]
     bad_dog! 0.1 do
@@ -512,6 +468,7 @@ class Flog < SexpProcessor
     exp.shift # pre/post
     s()
   end
+  alias :process_until :process_while
 
   def process_yield(exp)
     add_to_score :yield, OTHER_SCORES[:yield]
