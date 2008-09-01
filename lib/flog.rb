@@ -4,12 +4,15 @@ require 'sexp_processor'
 require 'unified_ruby'
 
 $a ||= false # report all methods, not just 60%
+$c ||= false # continue despite syntax errors
 $m ||= false # real methods only (no global scope)
+$n ||= false # no method details
 $s ||= false # summary only
 $v ||= false # verbose, print methods as processed
+$q ||= false # quiet, don't show method details
 
 class Flog < SexpProcessor
-  VERSION = '1.2.0'
+  VERSION = '1.2.1'
 
   include UnifiedRuby
 
@@ -17,7 +20,9 @@ class Flog < SexpProcessor
   SCORES = Hash.new(1)
   BRANCHING = [ :and, :case, :else, :if, :or, :rescue, :until, :when, :while ]
 
+  ##
   # various non-call constructs
+
   OTHER_SCORES = {
     :alias => 2,
     :assignment => 1,
@@ -31,14 +36,18 @@ class Flog < SexpProcessor
     :yield => 1,
   }
 
+  ##
   # eval forms
+
   SCORES.merge!(:define_method => 5,
                 :eval => 5,
                 :module_eval => 5,
                 :class_eval => 5,
                 :instance_eval => 5)
 
+  ##
   # various "magic" usually used for "clever code"
+
   SCORES.merge!(:alias_method => 2,
                 :extend => 2,
                 :include => 2,
@@ -60,7 +69,9 @@ class Flog < SexpProcessor
                 :send => 3,
                 :undef_method => 2)
 
+  ##
   # calls I don't like and usually see being abused
+
   SCORES.merge!(:inject => 2)
 
   @@no_class = :main
@@ -82,15 +93,30 @@ class Flog < SexpProcessor
     @calls["#{self.klass_name}##{self.method_name}"][name] += score * @multiplier
   end
 
+  ##
+  # For the duration of the block the complexity factor is increased
+  # by #bonus This allows the complexity of sub-expressions to be
+  # influenced by the expressions in which they are found.  Yields 42
+  # to the supplied block.
+
   def bad_dog! bonus
     @multiplier += bonus
     yield 42
     @multiplier -= bonus
   end
 
+  ##
+  # process each element of #exp in turn.
+
   def bleed exp
     process exp.shift until exp.empty?
   end
+
+  ##
+  # Process #files with flog, recursively descending directories.
+  #--
+  # There is no way to exclude directories at present (RCS, SCCS, .svn)
+  #++
 
   def flog_files *files
     files.flatten.each do |file|
@@ -107,7 +133,9 @@ class Flog < SexpProcessor
             warn e.inspect + " at " + e.backtrace.first(5).join(', ')
             warn "...stupid lemmings and their bad erb templates... skipping"
           else
-            raise e
+            raise e unless $c
+            warn file
+            warn e.inspect + " at " + e.backtrace.first(5).join(', ')
           end
         end
       end
@@ -120,9 +148,16 @@ class Flog < SexpProcessor
     @klasses.shift
   end
 
+  ##
+  # returns the first class in the list, or @@no_class if there are
+  # none.
+
   def klass_name
     @klasses.first || @@no_class
   end
+
+  ##
+  # Adds name to the list of methods, for the duration of the block
 
   def method name
     @methods.unshift name
@@ -130,17 +165,24 @@ class Flog < SexpProcessor
     @methods.shift
   end
 
+  ##
+  # returns the first method in the list, or @@no_method if there are
+  # none.
+
   def method_name
     @methods.first || @@no_method
   end
 
+  ##
+  # Report results to #io, STDOUT by default.
+
   def report io = $stdout
     current = 0
+    totals = self.totals
     total_score = self.total
     max = total_score * THRESHOLD
-    totals = self.totals
 
-    io.puts "Total Flog = %.1f (%.1f flog / method)" % [total_score, self.average]
+    io.puts "Total Flog = %.1f (%.1f +/- %.1f flog / method)" % [total_score, self.average, self.stddev]
     io.puts
 
     exit 0 if $s
@@ -149,9 +191,10 @@ class Flog < SexpProcessor
       next if $m and klass_method =~ /##{@@no_method}/
       total = totals[klass_method]
       io.puts "%s: (%.1f)" % [klass_method, total]
+      next if $q
       calls.sort_by { |k,v| -v }.each do |call, count|
         io.puts "  %6.1f: %s" % [count, call]
-      end
+      end unless $n
 
       current += total
       break if current >= max
@@ -161,24 +204,20 @@ class Flog < SexpProcessor
   end
 
   def reset
-    @totals = @total_score = nil
+    # TODO: rename @totals
+    @totals = @total = nil
     @multiplier = 1.0
     @calls = Hash.new { |h,k| h[k] = Hash.new 0 }
   end
 
-  def total
-    self.totals unless @total_score # calculates total_score as well
+  attr_reader :total, :average, :stddev
 
-    @total_score
-  end
-
-  def average
-    self.total / self.calls.size
-  end
+  ##
+  # Return the total score and populates @totals.
 
   def totals
     unless @totals then
-      @total_score = 0
+      @total = 0
       @totals = Hash.new(0)
       self.calls.each do |meth, tally|
         next if $m and meth =~ /##{@@no_method}$/
@@ -192,9 +231,17 @@ class Flog < SexpProcessor
         end
         score = Math.sqrt(a*a + b*b + c*c)
         @totals[meth] = score
-        @total_score += score
+        @total += score
       end
     end
+
+    size = self.calls.size.to_f
+    @average = @total / size
+
+    sum = 0
+    @totals.values.each { |i| sum += (i - @average) ** 2 }
+    @stddev = (1 / size * sum)
+
     @totals
   end
 
@@ -238,7 +285,6 @@ class Flog < SexpProcessor
     s()
   end
 
-  # [:block_pass, [:lit, :blah], [:fcall, :foo]]
   def process_block_pass(exp)
     arg = exp.shift
     call = exp.shift
