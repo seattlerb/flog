@@ -153,7 +153,19 @@ class Flog < SexpProcessor
   # none.
 
   def klass_name
-    @klasses.first || @@no_class
+    name = @klasses.first || @@no_class
+    if Sexp === name then
+      case name.first
+      when :colon2 then
+        name = name.flatten
+        name.delete :const
+        name.delete :colon2
+        name = name.join("::")
+      when :colon3 then
+        name = name.last
+      end
+    end
+    name
   end
 
   ##
