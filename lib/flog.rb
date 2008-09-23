@@ -24,50 +24,50 @@ class Flog < SexpProcessor
   # various non-call constructs
 
   OTHER_SCORES = {
-    :alias => 2,
-    :assignment => 1,
-    :block => 1,
-    :branch => 1,
-    :lit_fixnum => 0.25,
-    :sclass => 5,
-    :super => 1,
-    :to_proc_icky! => 10,
+    :alias          => 2,
+    :assignment     => 1,
+    :block          => 1,
+    :branch         => 1,
+    :lit_fixnum     => 0.25,
+    :sclass         => 5,
+    :super          => 1,
+    :to_proc_icky!  => 10,
     :to_proc_normal => 5,
-    :yield => 1,
+    :yield          => 1,
   }
 
   ##
   # eval forms
 
   SCORES.merge!(:define_method => 5,
-                :eval => 5,
-                :module_eval => 5,
-                :class_eval => 5,
+                :eval          => 5,
+                :module_eval   => 5,
+                :class_eval    => 5,
                 :instance_eval => 5)
 
   ##
   # various "magic" usually used for "clever code"
 
-  SCORES.merge!(:alias_method => 2,
-                :extend => 2,
-                :include => 2,
-                :instance_method => 2,
-                :instance_methods => 2,
-                :method_added => 2,
-                :method_defined? => 2,
-                :method_removed => 2,
-                :method_undefined => 2,
-                :private_class_method => 2,
-                :private_instance_methods => 2,
-                :private_method_defined? => 2,
+  SCORES.merge!(:alias_method               => 2,
+                :extend                     => 2,
+                :include                    => 2,
+                :instance_method            => 2,
+                :instance_methods           => 2,
+                :method_added               => 2,
+                :method_defined?            => 2,
+                :method_removed             => 2,
+                :method_undefined           => 2,
+                :private_class_method       => 2,
+                :private_instance_methods   => 2,
+                :private_method_defined?    => 2,
                 :protected_instance_methods => 2,
-                :protected_method_defined? => 2,
-                :public_class_method => 2,
-                :public_instance_methods => 2,
-                :public_method_defined? => 2,
-                :remove_method => 2,
-                :send => 3,
-                :undef_method => 2)
+                :protected_method_defined?  => 2,
+                :public_class_method        => 2,
+                :public_instance_methods    => 2,
+                :public_method_defined?     => 2,
+                :remove_method              => 2,
+                :send                       => 3,
+                :undef_method               => 2)
 
   ##
   # calls I don't like and usually see being abused
@@ -130,12 +130,12 @@ class Flog < SexpProcessor
           process Sexp.from_array(sexp).first
         rescue SyntaxError => e
           if e.inspect =~ /<%|%>/ then
-            warn e.inspect + " at " + e.backtrace.first(5).join(', ')
+            warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
             warn "...stupid lemmings and their bad erb templates... skipping"
           else
             raise e unless $c
             warn file
-            warn e.inspect + " at " + e.backtrace.first(5).join(', ')
+            warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           end
         end
       end
@@ -403,7 +403,8 @@ class Flog < SexpProcessor
     context = (self.context - [:class, :module, :scope])
     if context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
       recv = exp.first
-      if recv[0] == :call and recv[1] == nil and recv.arglist[1] and [:lit, :str].include? recv.arglist[1][0] then
+      if (recv[0] == :call and recv[1] == nil and recv.arglist[1] and
+          [:lit, :str].include? recv.arglist[1][0]) then
         msg = recv[2]
         submsg = recv.arglist[1][1]
         self.method submsg do
