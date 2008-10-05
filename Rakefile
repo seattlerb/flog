@@ -3,7 +3,11 @@
 require 'rubygems'
 require 'hoe'
 
-$: << '../../ParseTree/dev/lib' << '../../RubyInline/dev/lib'
+Hoe.add_include_dirs("../../ParseTree/dev/lib",
+                     "../../RubyInline/dev/lib",
+                     "../../sexp_processor/dev/lib",
+                     "../../ZenTest/dev/lib",
+                     "lib")
 
 require './lib/flog'
 
