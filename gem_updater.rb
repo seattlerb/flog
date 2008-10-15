@@ -1,9 +1,11 @@
 require 'rubygems/remote_fetcher'
 
+$u ||= false
+
 module GemUpdater
   GEMURL = URI.parse 'http://gems.rubyforge.org'
 
-  @@cache = nil
+  @@index = nil
 
   def self.stupid_gems
     ["ruby-aes-table1-1.0.gem", # stupid dups usually because of "dash" renames
@@ -23,23 +25,40 @@ module GemUpdater
     end
   end
 
+  def self.get_source_index
+    return @@index if @@index
+
+    dump = if $u or not File.exist? '.source_index' then
+             url = GEMURL + "Marshal.#{Gem.marshal_version}.Z"
+             dump = Gem::RemoteFetcher.fetcher.fetch_path url
+             dump = Gem.inflate dump
+             open '.source_index', 'wb' do |io| io.write dump end
+           else
+             open '.source_index', 'rb' do |io| io.read end
+           end
+
+    @@index = Marshal.load dump
+  end
+
   def self.get_latest_gems
-    return @@cache if @@cache
+    @@cache ||= get_source_index.latest_specs
+  end
 
-    dump = nil
+  def self.get_gems_by_name
+    @@by_name ||= Hash[*get_latest_gems.map { |gem|
+                         [gem.name, gem, gem.full_name, gem]
+                       }.flatten]
+  end
 
-    if $u or not File.exist? '.source_index' then
-      url = GEMURL + "Marshal.#{Gem.marshal_version}.Z"
-      dump = Gem::RemoteFetcher.fetcher.fetch_path url
-      dump = Gem.inflate dump
-      open '.source_index', 'wb' do |io| io.write dump end
-    else
-      open '.source_index', 'rb' do |io| dump = io.read end
-    end
+  def self.dependencies_of name
+    index = self.get_source_index
+    get_gems_by_name[name].dependencies.map { |dep| index.search(dep).last }
+  end
 
-    dump = Marshal.load dump
-
-    @@cache = dump.latest_specs
+  def self.dependent_upon name
+    get_latest_gems.find_all { |gem|
+      gem.dependencies.any? { |dep| dep.name == name }
+    }
   end
 
   def self.update_gem_tarballs
