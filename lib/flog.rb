@@ -444,8 +444,7 @@ class Flog < SexpProcessor
 
   def process_masgn(exp)
     add_to_score :assignment, OTHER_SCORES[:assignment]
-    process exp.shift # lhs
-    process exp.shift # rhs
+    bleed exp
     s()
   end
 
