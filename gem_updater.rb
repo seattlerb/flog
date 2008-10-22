@@ -31,8 +31,10 @@ module GemUpdater
     dump = if $u or not File.exist? '.source_index' then
              url = GEMURL + "Marshal.#{Gem.marshal_version}.Z"
              dump = Gem::RemoteFetcher.fetcher.fetch_path url
+             require 'zlib'
              dump = Gem.inflate dump
              open '.source_index', 'wb' do |io| io.write dump end
+             dump
            else
              open '.source_index', 'rb' do |io| io.read end
            end
