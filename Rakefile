@@ -16,7 +16,8 @@ Hoe.new('flog', Flog::VERSION) do |flog|
 
   flog.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
 
-  flog.extra_deps << ["ParseTree", '>= 2.0.1']
+  flog.extra_deps << ['sexp_processor', '~> 3.0']
+  flog.extra_deps << ["ParseTree", '~> 3.0']
 end
 
 # vim: syntax=Ruby
