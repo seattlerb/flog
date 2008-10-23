@@ -3,6 +3,7 @@ Manifest.txt
 README.txt
 Rakefile
 bin/flog
+gem_updater.rb
 lib/flog.rb
 unpack.rb
 update_scores.rb
