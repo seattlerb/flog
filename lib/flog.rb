@@ -12,7 +12,7 @@ $v ||= false # verbose, print methods as processed
 $q ||= false # quiet, don't show method details
 
 class Flog < SexpProcessor
-  VERSION = '1.2.1'
+  VERSION = '1.2.0'
 
   include UnifiedRuby
 

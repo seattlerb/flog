@@ -1,10 +1,21 @@
-=== 1.2.0 /
+=== 1.2.0 / 2008-10-22
 
-* 3 minor enhancements:
+* 14 minor enhancements:
 
+  * Added -c flag to continue dispite errors.
   * Added -m to only report code in methods (skips #none).
-  * Added avg score per method to report.
+  * Added -n flag to give NO method details (summary only)
   * Added -n to skip method details... pussies should learn grep.
+  * Added -q to quiet method details (total per method only)
+  * Added avg & stddev to total.
+  * Added avg score per method to report.
+  * Added lots of doco from contributors (hugh sasse?).
+  * Fixed class names when const2/3.
+  * Fixed unified ruby changes
+  * Refactored flog with help from flay.
+  * Refactored get_source_index
+  * Refactored into gem_updater.rb and cleaned up.
+  * Works with new incremental rubygems, albiet slower than before.
 
 === 1.1.0 / 2007-08-21
 
