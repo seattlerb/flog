@@ -9,7 +9,7 @@
   * Added -q to quiet method details (total per method only)
   * Added avg & stddev to total.
   * Added avg score per method to report.
-  * Added lots of doco from contributors (hugh sasse?).
+  * Added lots of doco from contributors. Thanks Hugh Sasse!
   * Fixed class names when const2/3.
   * Fixed unified ruby changes
   * Refactored flog with help from flay.
