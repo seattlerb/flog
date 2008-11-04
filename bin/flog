@@ -1,30 +1,46 @@
-#!/usr/local/bin/ruby -ws
+#!/usr/local/bin/ruby -w
 
+require 'optparse'
 require 'flog'
 
-# In case this is being called on the end of a pipe:
+options = {}
+op = OptionParser.new do |opts|
+  opts.on('-a', '--all', "display all flog results, not top 60%") do |a|
+    options[:all] = a
+  end
+
+  opts.on('-s', '--score', 'display total score only')  do |s|
+    options[:score] = s
+  end
+
+  opts.on('-m', '--methods-only', 'skip code outside of methods') do |m|
+    options[:methods] = m
+  end
+
+  opts.on("-I path1,path2,path3", Array, 'ruby include paths to search') do |list|
+    options[:paths] = list.collect {|l| l.to_s }
+  end
+
+  opts.on('-b', '--blame', 'include blame information for methods') do |b|
+    options[:blame] = b
+  end
+
+  opts.on('-v', '--verbose', 'verbosely display progress and errors')  do |v|
+    options[:verbose] = v
+  end
+
+  opts.on_tail('-h', '--help', 'show this message') do
+    puts opts
+    exit
+  end
+end.parse!
+
+options[:paths].each {|dir| $: << dir } if options[:paths]
+
 ARGV.push "-" if ARGV.empty?
 
-if defined? $h then
-  puts "#{File.basename $0} options dirs_or_files"
-  puts "  -a      display all flog results, not top 60%"
-  puts "  -c      continue despite syntax errors"
-  puts "  -h      display help"
-  puts "  -I=path extend $LOAD_PATH with path"
-  puts "  -m      skip code outside of methods"
-  puts "  -n      no method details in report"
-  puts "  -s      display total score only"
-  puts "  -v      verbosely display progress and errors"
-  puts "  -q      quiet, don't show method breakdowns"
-  exit 0
-end
-
-if defined? $I and String === $I then
-  $I.split(/:/).each do |dir|
-    $: << dir
-  end
-end
-
-flogger = Flog.new
+flogger = Flog.new(options)
 flogger.flog_files ARGV
 flogger.report
+
+exit 0
