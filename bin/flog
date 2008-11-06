@@ -17,8 +17,16 @@ op = OptionParser.new do |opts|
     options[:methods] = m
   end
 
-  opts.on("-I path1,path2,path3", Array, 'ruby include paths to search') do |list|
-    options[:paths] = list.collect {|l| l.to_s }
+  opts.on('-n', '--no-details', 'skip method details in report') do |n|
+    options[:no_details] = n
+  end
+
+  opts.on('-c', '--continue', 'continue despite syntax errors') do |c|
+    options[:continue] = c
+  end
+
+  opts.on("-I path1,path2,path3", Array, 'ruby include paths to search') do |i|
+    options[:paths] = i.map { |l| l.to_s }
   end
 
   opts.on('-b', '--blame', 'include blame information for methods') do |b|
@@ -27,6 +35,11 @@ op = OptionParser.new do |opts|
 
   opts.on('-v', '--verbose', 'verbosely display progress and errors')  do |v|
     options[:verbose] = v
+  end
+
+  # TODO: determine difference between -q and -n
+  opts.on('-q', '--quiet', "quiet, don't show method breakdowns")  do |v|
+    options[:quiet] = v
   end
 
   opts.on_tail('-h', '--help', 'show this message') do

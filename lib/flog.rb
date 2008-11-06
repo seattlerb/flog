@@ -3,20 +3,12 @@ require 'parse_tree'
 require 'sexp_processor'
 require 'unified_ruby'
 
-$a ||= false # report all methods, not just 60%
-$c ||= false # continue despite syntax errors
-$m ||= false # real methods only (no global scope)
-$n ||= false # no method details
-$s ||= false # summary only
-$v ||= false # verbose, print methods as processed
-$q ||= false # quiet, don't show method details
-
 class Flog < SexpProcessor
   VERSION = '1.2.0'
 
   include UnifiedRuby
 
-  THRESHOLD = $a ? 1.0 : 0.60
+  THRESHOLD = 0.60
   SCORES = Hash.new 1
   BRANCHING = [ :and, :case, :else, :if, :or, :rescue, :until, :when, :while ]
 
@@ -105,9 +97,14 @@ class Flog < SexpProcessor
     collect_blame(file) if options[:blame]
     process_parse_tree(ruby, file)
   rescue SyntaxError => e
-    raise e unless e.inspect =~ /<%|%>/
-    warn e.inspect + " at " + e.backtrace.first(5).join(', ') +
-      "\n...stupid lemmings and their bad erb templates... skipping"
+    if e.inspect =~ /<%|%>/ then
+      warn e.inspect + " at " + e.backtrace.first(5).join(', ')
+      warn "\n...stupid lemmings and their bad erb templates... skipping"
+    else
+      raise e unless options[:continue]
+      warn file
+      warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
+    end
   end
 
   def flog_directory dir
@@ -216,7 +213,7 @@ class Flog < SexpProcessor
 
     call_list.sort_by { |k,v| -v }.each do |call, count|
       io.puts "  %6.1f: %s" % [count, call]
-    end
+    end unless options[:no_details] || options[:quiet]
 
     total
   end
@@ -471,6 +468,7 @@ class Flog < SexpProcessor
 
     add_to_score :branch
 
+    exp.pop if exp.last == 0
     process exp.shift # no penalty for LHS
 
     penalize_by 0.1 do
