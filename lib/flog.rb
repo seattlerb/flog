@@ -4,7 +4,7 @@ require 'sexp_processor'
 require 'unified_ruby'
 
 class Flog < SexpProcessor
-  VERSION = '1.2.0'
+  VERSION = '2.0.0'
 
   include UnifiedRuby
 
@@ -156,7 +156,7 @@ class Flog < SexpProcessor
     @total_score += amount
   end
 
-  def initialize options
+  def initialize options = {}
     super()
     @options = options
     @class_stack = []

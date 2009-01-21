@@ -1,3 +1,17 @@
+=== 2.0.0 / 2009-01-20
+
+* 1 major enhancement:
+
+  * Pulled in and merged Rick Bradley's awesome flame project into flog.
+
+* 1 minor enhancement:
+
+  * Added gauntlet plugin
+
+* 1 bug fix:
+
+  * "hugh sasse".split(/\s/).map{|x|x.capitalize}.join(" ") # :-)
+
 === 1.2.0 / 2008-10-22
 
 * 14 minor enhancements:

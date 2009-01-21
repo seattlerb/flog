@@ -13,10 +13,6 @@ describe Flog do
   end
 
   describe 'when initializing' do
-    it 'should require options arguments' do
-      lambda { Flog.new }.should raise_error(ArgumentError)
-    end
-
     it 'should not reference the parse tree' do
       ParseTree.expects(:new).never
       Flog.new(@options)
