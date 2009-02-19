@@ -4,7 +4,7 @@ require 'sexp_processor'
 require 'unified_ruby'
 
 class Flog < SexpProcessor
-  VERSION = '2.0.0'
+  VERSION = '2.0.1'
 
   include UnifiedRuby
 
@@ -72,7 +72,6 @@ class Flog < SexpProcessor
 
   attr_accessor :multiplier
   attr_reader :calls, :options, :class_stack, :method_stack
-  attr_reader :total, :average, :stddev
 
   def add_to_score name, score = OTHER_SCORES[name]
     @calls["#{klass_name}##{method_name}"][name] += score * @multiplier

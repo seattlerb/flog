@@ -1,3 +1,9 @@
+=== 2.0.1 / ??
+
+* 1 bug fix:
+
+  * removed extra attr_readers for total and average. doh
+
 === 2.0.0 / 2009-01-20
 
 * 1 major enhancement:
