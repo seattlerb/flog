@@ -7,6 +7,7 @@ Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../RubyInline/dev/lib",
                      "../../sexp_processor/dev/lib",
                      "../../ZenTest/dev/lib",
+                     "../../minitest/dev/lib",
                      "lib")
 
 require './lib/flog'
@@ -18,6 +19,9 @@ Hoe.new('flog', Flog::VERSION) do |flog|
 
   flog.extra_deps << ['sexp_processor', '~> 3.0']
   flog.extra_deps << ["ParseTree", '~> 3.0']
+
+  flog.testlib = :minitest
 end
+
 
 # vim: syntax=Ruby

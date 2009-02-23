@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 require 'flog'
 require 'sexp_processor'
 
-describe Flog do
+describe "Flog Command Line" do
   before :each do
     @flog = Flog.new({})
   end
@@ -15,12 +15,12 @@ describe Flog do
       end
 
       it 'should not fail when flogging the given input' do
-        lambda { @flog.flog_files(fixture_files(@files)) }.should_not raise_error
+        lambda { @flog.flog_files(fixture_files(@files)) }.wont_raise_error
       end
 
       it 'should report an overall flog score of 0' do
         @flog.flog_files(fixture_files(@files))
-        @flog.total.should be_close(0.0, 0.0000000001)
+        @flog.total.must_be_close_to 0.0
       end
     end
 
@@ -168,26 +168,28 @@ describe Flog do
       end
 
       it 'should not fail when flogging the given input' do
-        lambda { @flog.flog_files(fixture_files(@files)) }.should_not raise_error
+        lambda { @flog.flog_files(fixture_files(@files)) }.wont_raise_error
       end
 
       currently 'should report an overall flog score of 259.354295339925' do
         @flog.flog_files(fixture_files(@files))
-        @flog.total.should be_close(259.354295339925, 0.0000000001)
+        @flog.total.must_be_close_to 259.354295339925
       end
 
       currently 'should compute the same call data as flog-1.1.0' do
         @flog.flog_files(fixture_files(@files))
         @flog.calls.each_pair do |k,v|
           v.each_pair do |x, y|
-            @calls[k][x].should be_close(y, 0.0000000001)
+            @calls[k][x].must_be_close_to y
           end
         end
       end
 
       currently 'should compute the same totals data as flog-1.1.0' do
         @flog.flog_files(fixture_files(@files))
-        @flog.totals.each_pair {|k,v| v.should be_close(@totals[k], 0.0000000001) }
+        @flog.totals.each_pair do |k,v|
+          v.must_be_close_to @totals[k]
+        end
       end
     end
 
@@ -408,21 +410,21 @@ describe Flog do
 
 #       currently 'should report an overall flog score of 209.977217342726' do
 #         @flog.flog_files(fixture_files(@files))
-#         @flog.total.should be_close(209.977217342726, 0.0000000001)
+#         @flog.total.must_be_close_to 209.977217342726
 #       end
 
 #       currently 'should compute the same call data as flog-1.1.0' do
 #         @flog.flog_files(fixture_files(@files))
 #         @flog.calls.each_pair do |k,v|
 #           v.each_pair do |x, y|
-#             @calls[k][x].should be_close(y, 0.0000000001)
+#             @calls[k][x].must_be_close_to y
 #           end
 #         end
 #       end
 
 #       currently 'should compute the same totals data as flog-1.1.0' do
 #         @flog.flog_files(fixture_files(@files))
-#         @flog.totals.each_pair {|k,v| v.should be_close(@totals[k], 0.0000000001) }
+#         @flog.totals.each_pair {|k,v| v.must_be_close_to @totals[k]
 #       end
 #     end
 
@@ -921,14 +923,14 @@ describe Flog do
 
 #       currently 'should report an overall flog score of 981.137760580242' do
 #         @flog.flog_files(fixture_files(@files))
-#         @flog.total.should be_close(981.137760580242, 0.0000000001)
+#         @flog.total.must_be_close_to 981.137760580242
 #       end
 
 #       currently 'should compute the same call data as flog-1.1.0' do
 #         @flog.flog_files(fixture_files(@files))
 #         @flog.calls.each_pair do |k,v|
 #           v.each_pair do |x, y|
-#             @calls[k][x].should be_close(y, 0.0000000001)
+#             @calls[k][x].must_be_close_to y
 #           end
 #         end
 #       end
@@ -936,7 +938,7 @@ describe Flog do
 #       currently 'should compute the same totals data as flog-1.1.0' do
 #         @flog.flog_files(fixture_files(@files))
 #         @flog.totals.each_pair do |k,v|
-#           v.should be_close(@totals[k], 0.0000000001)
+#           v.must_be_close_to @totals[k]
 #         end
 #       end
 #     end
