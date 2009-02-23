@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper.rb'
+require File.dirname(__FILE__) + '/test_helper.rb'
 require 'flog'
 
 describe 'flog command' do
