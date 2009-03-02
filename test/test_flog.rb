@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/test_helper.rb'
+require 'test/test_helper'
 require 'flog'
 require 'sexp_processor'
 

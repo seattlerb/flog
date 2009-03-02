@@ -1,12 +1,14 @@
-require File.dirname(__FILE__) + '/test_helper.rb'
+require 'test/test_helper'
 require 'flog'
 
 describe 'flog command' do
   before :each do
-    @flog = stub('Flog', :flog_files => true, :report => true)
+    @flog = stub('Flog',
+                 :flog_files => true,
+                 :report => true,
+                 :exit => nil,
+                 :puts => nil)
     # Flog.stubs(:new).returns(@flog)
-    def @flog.exit; end
-    def @flog.puts; end
   end
 
   def run_command
