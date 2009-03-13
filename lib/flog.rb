@@ -73,6 +73,8 @@ class Flog < SexpProcessor
   attr_accessor :multiplier
   attr_reader :calls, :options, :class_stack, :method_stack
 
+  # TODO: rename options to option, you only deal with them one at a time...
+
   def add_to_score name, score = OTHER_SCORES[name]
     @calls["#{klass_name}##{method_name}"][name] += score * @multiplier
   end
@@ -212,7 +214,7 @@ class Flog < SexpProcessor
 
     call_list.sort_by { |k,v| -v }.each do |call, count|
       io.puts "  %6.1f: %s" % [count, call]
-    end unless options[:no_details] || options[:quiet]
+    end if options[:details]
 
     total
   end
