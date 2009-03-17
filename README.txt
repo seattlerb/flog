@@ -10,32 +10,33 @@ report. The higher the score, the more pain the code is in.
 
 == FEATURES/PROBLEMS:
 
-* Rough around the edges.
+* Easy to read reporting of complexity/pain.
 
 == SYNOPSIS:
 
-    % ./bin/flog bin/flog
-    Total score = 128.7
+    % ./bin/flog -g lib
+    Total Flog = 1097.2 (17.4 flog / method)
     
-    Flog#report: (21)
-         4: puts
-         2: sort_by
+       323.8: Flog total
+        85.3: Flog#output_details
+        61.9: Flog#process_iter
+        53.7: Flog#parse_options
     ...
 
 == REQUIREMENTS:
 
-* ruby2ruby
-* ParseTree
+* ruby2ruby (only for -v)
+* ParseTree (soon to switch to ruby_parser)
 
 == INSTALL:
 
-* sudo gem install -y flog
+* sudo gem install flog
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2007 Ryan Davis, Seattle.rb
+Copyright (c) 2007-2009 Ryan Davis, Seattle.rb
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
