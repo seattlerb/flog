@@ -5,13 +5,10 @@ Rakefile
 bin/flog
 gem_updater.rb
 lib/flog.rb
+lib/flog_task.rb
 lib/gauntlet_flog.rb
 unpack.rb
 update_scores.rb
-test/test_flog_command.rb
-test/test_flog_integration.rb
-test/test_flog.rb
-test/test_helper.rb
 spec_fixtures/collection/bigger_example/acts/date_range.rb
 spec_fixtures/collection/bigger_example/acts/range.rb
 spec_fixtures/collection/bigger_example/association_extensions/date_ranged.rb
@@ -23,3 +20,7 @@ spec_fixtures/directory/bot_parser_format.rb
 spec_fixtures/directory/bot_sender.rb
 spec_fixtures/empty/empty.rb
 spec_fixtures/simple/simple.rb
+test/test_flog.rb
+test/test_flog_command.rb
+test/test_flog_integration.rb
+test/test_helper.rb
