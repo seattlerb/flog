@@ -4,7 +4,7 @@ require 'sexp_processor'
 require 'unified_ruby'
 
 class Flog < SexpProcessor
-  VERSION = '2.0.1'
+  VERSION = '2.1.0'
 
   include UnifiedRuby
 

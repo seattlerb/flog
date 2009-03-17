@@ -1,4 +1,12 @@
-=== 2.0.1 / ??
+=== 2.1.0 / 2009-03-16
+
+* 5 minor enhancements:
+
+  * Added --group to aggregate and sort by class scores.
+  * Added flog_task.rb
+  * Made -q default, removed -n.
+  * Made report output more readable and processable.
+  * Moved option processing from bin/flog to lib/flog.rb for better testing.
 
 * 1 bug fix:
 
