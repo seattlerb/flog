@@ -3,56 +3,13 @@
 require 'optparse'
 require 'flog'
 
-# TODO: determine difference between -q and -n
-options = {}
-op = OptionParser.new do |opts|
-  opts.on("-a", "--all", "Display all flog results, not top 60%.") do |a|
-    options[:all] = a
-  end
-
-  opts.on("-b", "--blame", "Include blame information for methods.") do |b|
-    options[:blame] = b
-  end
-
-  opts.on("-c", "--continue", "Continue despite syntax errors.") do |c|
-    options[:continue] = c
-  end
-
-  opts.on("-d", "--details", "Show method details.") do
-    options[:details] = true
-  end
-
-  opts.on("-h", "--help", "Show this message.") do
-    puts opts
-    exit
-  end
-
-  opts.on("-I path1,path2,path3", Array, "Ruby include paths to search.") do |i|
-    options[:paths] = i.map { |l| l.to_s }
-  end
-
-  opts.on("-m", "--methods-only", "Skip code outside of methods.") do |m|
-    options[:methods] = m
-  end
-
-  opts.on("-q", "--quiet", "Don't show method details. [default]")  do |v|
-    options[:quiet] = v
-  end
-
-  opts.on("-s", "--score", "Display total score only.")  do |s|
-    options[:score] = s
-  end
-
-  opts.on("-v", "--verbose", "Display progress during processing.")  do |v|
-    options[:verbose] = v
-  end
-end.parse!
+options = Flog.parse_options
 
 options[:paths].each {|dir| $: << dir } if options[:paths]
 
-ARGV.push "-" if ARGV.empty?
+ARGV << "-" if ARGV.empty?
 
-flogger = Flog.new(options)
+flogger = Flog.new options
 flogger.flog_files ARGV
 flogger.report
 

@@ -73,6 +73,64 @@ class Flog < SexpProcessor
   attr_accessor :multiplier
   attr_reader :calls, :options, :class_stack, :method_stack
 
+  def self.default_options
+    {
+      :quiet => true,
+    }
+  end
+
+  def self.parse_options
+    options = self.default_options
+    op = OptionParser.new do |opts|
+      opts.on("-a", "--all", "Display all flog results, not top 60%.") do |a|
+        options[:all] = a
+      end
+
+      opts.on("-b", "--blame", "Include blame information for methods.") do |b|
+        options[:blame] = b
+      end
+
+      opts.on("-c", "--continue", "Continue despite syntax errors.") do |c|
+        options[:continue] = c
+      end
+
+      opts.on("-d", "--details", "Show method details.") do
+        options[:details] = true
+      end
+
+      opts.on("-g", "--group", "Group and sort by class.") do
+        options[:group] = true
+      end
+
+      opts.on("-h", "--help", "Show this message.") do
+        puts opts
+        exit
+      end
+
+      opts.on("-I path1,path2,path3", Array, "Ruby include paths to search.") do |i|
+        options[:paths] = i.map { |l| l.to_s }
+      end
+
+      opts.on("-m", "--methods-only", "Skip code outside of methods.") do |m|
+        options[:methods] = m
+      end
+
+      opts.on("-q", "--quiet", "Don't show method details. [default]")  do |v|
+        options[:quiet] = v
+      end
+
+      opts.on("-s", "--score", "Display total score only.")  do |s|
+        options[:score] = s
+      end
+
+      opts.on("-v", "--verbose", "Display progress during processing.")  do |v|
+        options[:verbose] = v
+      end
+    end.parse!
+
+    options
+  end
+
   # TODO: rename options to option, you only deal with them one at a time...
 
   def add_to_score name, score = OTHER_SCORES[name]
@@ -200,9 +258,32 @@ class Flog < SexpProcessor
   def output_details(io, max = nil)
     my_totals = totals
     current = 0
-    calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
-      current += output_method_details(io, class_method, call_list)
-      break if max and current >= max
+
+    if options[:group] then
+      scores = Hash.new 0
+      methods = Hash.new { |h,k| h[k] = [] }
+
+      calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
+        klass = class_method.split(/#|::/).first
+        score = totals[class_method]
+        methods[klass] << [class_method, score]
+        scores[klass] += score
+        current += score
+        break if max and current >= max
+      end
+
+      scores.sort_by { |_, n| -n }.each do |klass, total|
+        io.puts
+        io.puts "%8.1f: %s" % [total, "#{klass} total"]
+        methods[klass].each do |name, score|
+          io.puts "%8.1f: %s" % [score, name]
+        end
+      end
+    else
+      calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
+        current += output_method_details(io, class_method, call_list)
+        break if max and current >= max
+      end
     end
   end
 
@@ -210,7 +291,7 @@ class Flog < SexpProcessor
     return 0 if options[:methods] and class_method =~ /##{@@no_method}/
 
     total = totals[class_method]
-    io.puts "%s: (%.1f)" % [class_method, total]
+    io.puts "%8.1f: %s" % [total, class_method]
 
     call_list.sort_by { |k,v| -v }.each do |call, count|
       io.puts "  %6.1f: %s" % [count, call]
