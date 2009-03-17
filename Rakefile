@@ -10,7 +10,7 @@ Hoe.add_include_dirs("../../ParseTree/dev/lib",
                      "../../minitest/dev/lib",
                      "lib")
 
-require './lib/flog'
+require 'flog'
 
 Hoe.new('flog', Flog::VERSION) do |flog|
   flog.rubyforge_name = 'seattlerb'
