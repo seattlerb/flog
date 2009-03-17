@@ -280,6 +280,7 @@ class Flog < SexpProcessor
         end
       end
     else
+      io.puts
       calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
         current += output_method_details(io, class_method, call_list)
         break if max and current >= max
@@ -301,7 +302,8 @@ class Flog < SexpProcessor
   end
 
   def output_summary(io)
-    io.puts "Total Flog = %.1f (%.1f flog / method)\n" % [total, average]
+    io.puts "%8.1f: %s" % [total, "flog total"]
+    io.puts "%8.1f: %s" % [average, "flog/method average"]
   end
 
   def parse_tree
