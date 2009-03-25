@@ -1,12 +1,9 @@
 require 'rubygems'
-require 'parse_tree'
 require 'sexp_processor'
-require 'unified_ruby'
+require 'ruby_parser'
 
 class Flog < SexpProcessor
   VERSION = '2.1.0'
-
-  include UnifiedRuby
 
   THRESHOLD = 0.60
   SCORES = Hash.new 1
@@ -307,7 +304,7 @@ class Flog < SexpProcessor
   end
 
   def parse_tree
-    @parse_tree ||= ParseTree.new(false)
+    @parse_tree ||= RubyParser.new
   end
 
   ##
@@ -323,8 +320,8 @@ class Flog < SexpProcessor
   end
 
   def process_parse_tree(ruby, file) # TODO: rename away from process
-    sexp = parse_tree.parse_tree_for_string(ruby, file)
-    process Sexp.from_array(sexp).first
+    ast = parse_tree.process(ruby, file)
+    process ast
   end
 
   def record_method_score(method, score)
