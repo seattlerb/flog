@@ -68,27 +68,28 @@ class Flog < SexpProcessor
   @@no_method = :none
 
   attr_accessor :multiplier
-  attr_reader :calls, :options, :class_stack, :method_stack
+  attr_reader :calls, :options, :class_stack, :method_stack, :mass
 
   def self.default_options
     {
-      :quiet => true,
+      :quiet    => true,
+      :continue => false,
     }
   end
 
   def self.parse_options
     options = self.default_options
     op = OptionParser.new do |opts|
-      opts.on("-a", "--all", "Display all flog results, not top 60%.") do |a|
-        options[:all] = a
+      opts.on("-a", "--all", "Display all flog results, not top 60%.") do
+        options[:all] = true
       end
 
-      opts.on("-b", "--blame", "Include blame information for methods.") do |b|
-        options[:blame] = b
+      opts.on("-b", "--blame", "Include blame information for methods.") do
+        options[:blame] = true
       end
 
-      opts.on("-c", "--continue", "Continue despite syntax errors.") do |c|
-        options[:continue] = c
+      opts.on("-c", "--continue", "Continue despite syntax errors.") do
+        options[:continue] = true
       end
 
       opts.on("-d", "--details", "Show method details.") do
@@ -152,9 +153,9 @@ class Flog < SexpProcessor
   def flog ruby, file
     collect_blame(file) if options[:blame]
     process_parse_tree(ruby, file)
-  rescue SyntaxError => e
+  rescue SyntaxError, Racc::ParseError => e
     if e.inspect =~ /<%|%>/ then
-      warn e.inspect + " at " + e.backtrace.first(5).join(', ')
+      warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
       warn "\n...stupid lemmings and their bad erb templates... skipping"
     else
       raise e unless options[:continue]
@@ -214,11 +215,12 @@ class Flog < SexpProcessor
 
   def initialize options = {}
     super()
-    @options = options
-    @class_stack = []
-    @method_stack = []
+    @options             = options
+    @class_stack         = []
+    @method_stack        = []
+    @mass                = {}
     self.auto_shift_type = true
-    self.require_empty = false # HACK
+    self.require_empty   = false # HACK
     self.reset
   end
 
@@ -321,6 +323,7 @@ class Flog < SexpProcessor
 
   def process_parse_tree(ruby, file) # TODO: rename away from process
     ast = parse_tree.process(ruby, file)
+    mass[file] = ast.mass
     process ast
   end
 
