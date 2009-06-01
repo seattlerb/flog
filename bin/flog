@@ -5,8 +5,6 @@ require 'flog'
 
 options = Flog.parse_options
 
-options[:paths].each {|dir| $: << dir } if options[:paths]
-
 ARGV << "-" if ARGV.empty?
 
 flogger = Flog.new options

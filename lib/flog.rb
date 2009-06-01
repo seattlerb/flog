@@ -1,6 +1,14 @@
 require 'rubygems'
 require 'sexp_processor'
 require 'ruby_parser'
+require 'optparse'
+
+# REFACTOR: push up to sexp_processor. also in flay
+class Sexp
+  def mass
+    @mass ||= self.structure.flatten.size
+  end
+end
 
 class Flog < SexpProcessor
   VERSION = '2.1.0'
@@ -77,6 +85,19 @@ class Flog < SexpProcessor
     }
   end
 
+  # REFACTOR: from flay
+  def self.expand_dirs_to_files *dirs
+    extensions = ['rb']
+
+    dirs.flatten.map { |p|
+      if File.directory? p then
+        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
+      else
+        p
+      end
+    }.flatten.sort
+  end
+
   def self.parse_options
     options = self.default_options
     op = OptionParser.new do |opts|
@@ -105,8 +126,10 @@ class Flog < SexpProcessor
         exit
       end
 
-      opts.on("-I path1,path2,path3", Array, "Ruby include paths to search.") do |i|
-        options[:paths] = i.map { |l| l.to_s }
+      opts.on("-I dir1,dir2,dir3", Array, "Add to LOAD_PATH.") do |dirs|
+        dirs.each do |dir|
+          $: << dir
+        end
       end
 
       opts.on("-m", "--methods-only", "Skip code outside of methods.") do |m|
@@ -137,6 +160,7 @@ class Flog < SexpProcessor
 
   ##
   # Process each element of #exp in turn.
+  # TODO: rename, bleed wasn't good, but this is actually worse
 
   def analyze_list exp
     process exp.shift until exp.empty?
@@ -147,49 +171,28 @@ class Flog < SexpProcessor
     total / calls.size
   end
 
-  def collect_blame filename # TODO: huh?
-  end
+  def flog(*files_or_dirs)
+    files = Flog.expand_dirs_to_files(*files_or_dirs)
 
-  def flog ruby, file
-    collect_blame(file) if options[:blame]
-    process_parse_tree(ruby, file)
-  rescue SyntaxError, Racc::ParseError => e
-    if e.inspect =~ /<%|%>/ then
-      warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
-      warn "\n...stupid lemmings and their bad erb templates... skipping"
-    else
-      raise e unless options[:continue]
-      warn file
-      warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
-    end
-  end
+    files.each do |file|
+      begin
+        # TODO: replace File.open to deal with "-"
+        ruby = file == '-' ? $stdin.read : File.read(file)
+        warn "** flogging #{file}" if options[:verbose]
 
-  def flog_directory dir
-    Dir["#{dir}/**/*.rb"].each do |file|
-      flog_file(file)
-    end
-  end
-
-  def flog_file file
-    return flog_directory(file) if File.directory? file
-    if file == '-'
-      raise "Cannot provide blame information for code provided on input stream." if options[:blame]
-      data = $stdin.read
-    end
-    data ||= File.read(file)
-    warn "** flogging #{file}" if options[:verbose]
-    flog(data, file)
-  end
-
-  ##
-  # Process #files with flog, recursively descending directories.
-  #--
-  # There is no way to exclude directories at present (RCS, SCCS, .svn)
-  #++
-
-  def flog_files(*files)
-    files.flatten.each do |file|
-      flog_file(file)
+        ast = @parser.process(ruby, file)
+        mass[file] = ast.mass
+        process ast
+      rescue SyntaxError, Racc::ParseError => e
+        if e.inspect =~ /<%|%>/ then
+          warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
+          warn "\n...stupid lemmings and their bad erb templates... skipping"
+        else
+          raise e unless options[:continue]
+          warn file
+          warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
+        end
+      end
     end
   end
 
@@ -219,6 +222,7 @@ class Flog < SexpProcessor
     @class_stack         = []
     @method_stack        = []
     @mass                = {}
+    @parser              = RubyParser.new
     self.auto_shift_type = true
     self.require_empty   = false # HACK
     self.reset
@@ -305,10 +309,6 @@ class Flog < SexpProcessor
     io.puts "%8.1f: %s" % [average, "flog/method average"]
   end
 
-  def parse_tree
-    @parse_tree ||= RubyParser.new
-  end
-
   ##
   # For the duration of the block the complexity factor is increased
   # by #bonus This allows the complexity of sub-expressions to be
@@ -319,12 +319,6 @@ class Flog < SexpProcessor
     @multiplier += bonus
     yield
     @multiplier -= bonus
-  end
-
-  def process_parse_tree(ruby, file) # TODO: rename away from process
-    ast = parse_tree.process(ruby, file)
-    mass[file] = ast.mass
-    process ast
   end
 
   def record_method_score(method, score)
@@ -349,9 +343,9 @@ class Flog < SexpProcessor
   end
 
   def reset
-    @totals = @total_score = nil
+    @totals     = @total_score = nil
     @multiplier = 1.0
-    @calls = Hash.new { |h,k| h[k] = Hash.new 0 }
+    @calls      = Hash.new { |h,k| h[k] = Hash.new 0 }
   end
 
   def score_method(tally)
