@@ -18,7 +18,7 @@ Hoe.spec 'flog' do
   self.rubyforge_name = 'seattlerb'
 
   extra_deps << ['sexp_processor', '~> 3.0']
-  extra_deps << ['ruby_parser',    '~> 1.1.0']
+  extra_deps << ['ruby_parser',    '~> 2.0']
 end
 
 # vim: syntax=ruby
