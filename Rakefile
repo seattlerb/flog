@@ -10,18 +10,15 @@ Hoe.add_include_dirs("../../ruby_parser/dev/lib",
                      "../../minitest/dev/lib",
                      "lib")
 
-require 'flog'
+Hoe.plugin :seattlerb
 
-Hoe.new('flog', Flog::VERSION) do |flog|
-  flog.rubyforge_name = 'seattlerb'
+Hoe.spec 'flog' do
+  developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
-  flog.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
+  self.rubyforge_name = 'seattlerb'
 
-  flog.extra_deps << ['sexp_processor', '~> 3.0']
-  flog.extra_deps << ['ruby_parser',    '~> 1.1.0']
-
-  flog.testlib = :minitest
+  extra_deps << ['sexp_processor', '~> 3.0']
+  extra_deps << ['ruby_parser',    '~> 1.1.0']
 end
 
-
-# vim: syntax=Ruby
+# vim: syntax=ruby

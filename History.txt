@@ -1,3 +1,10 @@
+=== 2.1.1 / 2009-06-23
+
+* 2 minor enhancements:
+
+  * Added mass accessor for gauntlet and other automated processors
+  * Switched from ParseTree to ruby_parser. Only 3x slower\! :(
+
 === 2.1.0 / 2009-03-16
 
 * 5 minor enhancements:
