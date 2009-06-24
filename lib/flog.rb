@@ -11,7 +11,7 @@ class Sexp
 end
 
 class Flog < SexpProcessor
-  VERSION = '2.1.1'
+  VERSION = '2.1.2'
 
   THRESHOLD = 0.60
   SCORES = Hash.new 1

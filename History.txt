@@ -1,3 +1,9 @@
+=== 2.1.2 / 2009-06-24
+
+* 1 bug fix:
+
+  * Fixed dependency spec on ruby_parser. (jan)
+
 === 2.1.1 / 2009-06-23
 
 * 2 minor enhancements:
