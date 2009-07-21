@@ -8,7 +8,7 @@ options = Flog.parse_options
 ARGV << "-" if ARGV.empty?
 
 flogger = Flog.new options
-flogger.flog_files ARGV
+flogger.flog ARGV
 flogger.report
 
 exit 0
