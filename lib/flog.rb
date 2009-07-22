@@ -181,6 +181,7 @@ class Flog < SexpProcessor
         warn "** flogging #{file}" if options[:verbose]
 
         ast = @parser.process(ruby, file)
+        next unless ast
         mass[file] = ast.mass
         process ast
       rescue SyntaxError, Racc::ParseError => e
