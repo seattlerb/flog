@@ -547,7 +547,8 @@ class Flog < SexpProcessor
 
     add_to_score :branch
 
-    exp.pop if exp.last == 0
+    exp.delete 0
+
     process exp.shift # no penalty for LHS
 
     penalize_by 0.1 do
