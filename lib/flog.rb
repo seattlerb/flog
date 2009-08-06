@@ -178,7 +178,7 @@ class Flog < SexpProcessor
         mass[file] = ast.mass
         process ast
       rescue SyntaxError, Racc::ParseError => e
-        if e.inspect =~ /<%|%>/ then
+        if e.inspect =~ /<%|%>/ or ruby =~ /<%|%>/ then
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
         else
@@ -261,7 +261,7 @@ class Flog < SexpProcessor
       methods = Hash.new { |h,k| h[k] = [] }
 
       calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
-        klass = class_method.split(/#|::/).first
+        klass = class_method.split(/#/).first
         score = totals[class_method]
         methods[klass] << [class_method, score]
         scores[klass] += score
