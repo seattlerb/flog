@@ -3,13 +3,6 @@ require 'sexp_processor'
 require 'ruby_parser'
 require 'optparse'
 
-# REFACTOR: push up to sexp_processor. also in flay
-class Sexp
-  def mass
-    @mass ||= self.structure.flatten.size
-  end
-end
-
 class Flog < SexpProcessor
   VERSION = '2.1.2'
 
