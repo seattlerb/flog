@@ -1,3 +1,17 @@
+=== 2.2.0 / 2009-08-14
+
+* 1 minor enhancement:
+
+  * #mass pushed up to sexp_processor
+
+* 5 bug fixes:
+
+  * --group didn't use canonical class name.
+  * Fixed bin/flog to use flog, not flog_files (removed in last rev)
+  * Fixed crasher when processing a block with empty goalposts.
+  * Switching to ruby_parser broke ERB syntax error handling. (imccoy)
+  * skip empty files instead of crashing. yay?
+
 === 2.1.2 / 2009-06-24
 
 * 1 bug fix:
