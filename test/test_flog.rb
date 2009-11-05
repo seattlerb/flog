@@ -187,7 +187,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_output_details_group
-    @flog.options[:group] = true
+    @flog.option[:group] = true
 
     test_flog
 
@@ -213,7 +213,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_output_method_details_detailed
-    @flog.options[:details] = true
+    @flog.option[:details] = true
 
     test_flog
 
@@ -480,7 +480,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_report_all
-    @flog.options[:all] = true
+    @flog.option[:all] = true
 
     test_report
     # FIX: add thresholded output

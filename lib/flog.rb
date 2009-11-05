@@ -69,7 +69,7 @@ class Flog < SexpProcessor
   @@no_method = :none
 
   attr_accessor :multiplier
-  attr_reader :calls, :options, :class_stack, :method_stack, :mass
+  attr_reader :calls, :option, :class_stack, :method_stack, :mass
 
   # REFACTOR: from flay
   def self.expand_dirs_to_files *dirs
@@ -85,30 +85,30 @@ class Flog < SexpProcessor
   end
 
   def self.parse_options args = ARGV
-    options = {
+    option = {
       :quiet    => true,
       :continue => false,
     }
 
     OptionParser.new do |opts|
       opts.on("-a", "--all", "Display all flog results, not top 60%.") do
-        options[:all] = true
+        option[:all] = true
       end
 
       opts.on("-b", "--blame", "Include blame information for methods.") do
-        options[:blame] = true
+        option[:blame] = true
       end
 
       opts.on("-c", "--continue", "Continue despite syntax errors.") do
-        options[:continue] = true
+        option[:continue] = true
       end
 
       opts.on("-d", "--details", "Show method details.") do
-        options[:details] = true
+        option[:details] = true
       end
 
       opts.on("-g", "--group", "Group and sort by class.") do
-        options[:group] = true
+        option[:group] = true
       end
 
       opts.on("-h", "--help", "Show this message.") do
@@ -122,27 +122,25 @@ class Flog < SexpProcessor
         end
       end
 
-      opts.on("-m", "--methods-only", "Skip code outside of methods.") do |m|
-        options[:methods] = m
+      opts.on("-m", "--methods-only", "Skip code outside of methods.") do
+        option[:methods] = true
       end
 
-      opts.on("-q", "--quiet", "Don't show method details. [default]")  do |v|
-        options[:quiet] = v
+      opts.on("-q", "--quiet", "Don't show method details. [default]") do
+        option[:quiet] = true
       end
 
-      opts.on("-s", "--score", "Display total score only.")  do |s|
-        options[:score] = s
+      opts.on("-s", "--score", "Display total score only.") do
+        option[:score] = true
       end
 
-      opts.on("-v", "--verbose", "Display progress during processing.")  do |v|
-        options[:verbose] = v
+      opts.on("-v", "--verbose", "Display progress during processing.") do
+        option[:verbose] = true
       end
     end.parse! Array(args)
 
-    options
+    option
   end
-
-  # TODO: rename options to option, you only deal with them one at a time...
 
   def add_to_score name, score = OTHER_SCORES[name]
     m = method_name
@@ -170,7 +168,7 @@ class Flog < SexpProcessor
       begin
         # TODO: replace File.open to deal with "-"
         ruby = file == '-' ? $stdin.read : File.read(file)
-        warn "** flogging #{file}" if options[:verbose]
+        warn "** flogging #{file}" if option[:verbose]
 
         ast = @parser.process(ruby, file)
         next unless ast
@@ -181,7 +179,7 @@ class Flog < SexpProcessor
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
         else
-          raise e unless options[:continue]
+          raise e unless option[:continue]
           warn file
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
         end
@@ -204,15 +202,14 @@ class Flog < SexpProcessor
     @method_stack.shift
   end
 
-  def initialize options = {}
+  def initialize option = {}
     super()
-    @options             = options
+    @option              = option
     @class_stack         = []
     @method_stack        = []
     @mass                = {}
     @parser              = RubyParser.new
     self.auto_shift_type = true
-    # self.require_empty   = false # HACK
     self.reset
   end
 
@@ -252,7 +249,7 @@ class Flog < SexpProcessor
     my_totals = totals
     current = 0
 
-    if options[:group] then
+    if option[:group] then
       scores = Hash.new 0
       methods = Hash.new { |h,k| h[k] = [] }
 
@@ -282,12 +279,12 @@ class Flog < SexpProcessor
   end
 
   def output_method_details(io, class_method, call_list)
-    # return 0 if options[:methods] and class_method =~ /##{@@no_method}/
+    # return 0 if option[:methods] and class_method =~ /##{@@no_method}/
 
     total = totals[class_method]
     io.puts "%8.1f: %s" % [total, class_method]
 
-    if options[:details] then
+    if option[:details] then
       call_list.sort_by { |k,v| -v }.each do |call, count|
         io.puts "  %6.1f:   %s" % [count, call]
       end
@@ -316,9 +313,9 @@ class Flog < SexpProcessor
     io.puts "%8.1f: %s" % [total, "flog total"]
     io.puts "%8.1f: %s" % [average, "flog/method average"]
 
-    return if options[:score]
+    return if option[:score]
 
-    if options[:all] then
+    if option[:all] then
       output_details(io)
     else
       output_details(io, total * THRESHOLD)
@@ -360,7 +357,7 @@ class Flog < SexpProcessor
       @totals = Hash.new(0)
 
       calls.each do |meth, tally|
-        next if options[:methods] and meth =~ /##{@@no_method}$/
+        next if option[:methods] and meth =~ /##{@@no_method}$/
         score = score_method(tally)
 
         @totals[meth] = score
