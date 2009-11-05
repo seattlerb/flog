@@ -71,13 +71,6 @@ class Flog < SexpProcessor
   attr_accessor :multiplier
   attr_reader :calls, :options, :class_stack, :method_stack, :mass
 
-  def self.default_options
-    {
-      :quiet    => true,
-      :continue => false,
-    }
-  end
-
   # REFACTOR: from flay
   def self.expand_dirs_to_files *dirs
     extensions = ['rb']
@@ -91,9 +84,13 @@ class Flog < SexpProcessor
     }.flatten.sort
   end
 
-  def self.parse_options
-    options = self.default_options
-    op = OptionParser.new do |opts|
+  def self.parse_options args = ARGV
+    options = {
+      :quiet    => true,
+      :continue => false,
+    }
+
+    OptionParser.new do |opts|
       opts.on("-a", "--all", "Display all flog results, not top 60%.") do
         options[:all] = true
       end
@@ -140,7 +137,7 @@ class Flog < SexpProcessor
       opts.on("-v", "--verbose", "Display progress during processing.")  do |v|
         options[:verbose] = v
       end
-    end.parse!
+    end.parse! Array(args)
 
     options
   end
@@ -148,14 +145,16 @@ class Flog < SexpProcessor
   # TODO: rename options to option, you only deal with them one at a time...
 
   def add_to_score name, score = OTHER_SCORES[name]
-    @calls["#{klass_name}##{method_name}"][name] += score * @multiplier
+    m = method_name
+    m = "#none" if m == @@no_method
+    signature = "#{klass_name}#{m}" # FIX: ugly
+    @calls[signature][name] += score * @multiplier
   end
 
   ##
   # Process each element of #exp in turn.
-  # TODO: rename, bleed wasn't good, but this is actually worse
 
-  def analyze_list exp
+  def process_until_empty exp
     process exp.shift until exp.empty?
   end
 
@@ -205,11 +204,6 @@ class Flog < SexpProcessor
     @method_stack.shift
   end
 
-  def increment_total_score_by amount
-    raise "@total_score isn't even set yet... dumbass" unless @total_score
-    @total_score += amount
-  end
-
   def initialize options = {}
     super()
     @options             = options
@@ -218,7 +212,7 @@ class Flog < SexpProcessor
     @mass                = {}
     @parser              = RubyParser.new
     self.auto_shift_type = true
-    self.require_empty   = false # HACK
+    # self.require_empty   = false # HACK
     self.reset
   end
 
@@ -236,7 +230,7 @@ class Flog < SexpProcessor
                name.delete :colon2
                name.join("::")
              when :colon3 then
-               name.last
+               name.last.to_s
              else
                name
              end
@@ -249,7 +243,9 @@ class Flog < SexpProcessor
   # none.
 
   def method_name
-    @method_stack.first || @@no_method
+    m = @method_stack.first || @@no_method
+    m = "##{m}" unless m =~ /::/ unless m == @@no_method # FIX
+    m
   end
 
   def output_details(io, max = nil)
@@ -286,21 +282,19 @@ class Flog < SexpProcessor
   end
 
   def output_method_details(io, class_method, call_list)
-    return 0 if options[:methods] and class_method =~ /##{@@no_method}/
+    # return 0 if options[:methods] and class_method =~ /##{@@no_method}/
 
     total = totals[class_method]
     io.puts "%8.1f: %s" % [total, class_method]
 
-    call_list.sort_by { |k,v| -v }.each do |call, count|
-      io.puts "  %6.1f: %s" % [count, call]
-    end if options[:details]
+    if options[:details] then
+      call_list.sort_by { |k,v| -v }.each do |call, count|
+        io.puts "  %6.1f:   %s" % [count, call]
+      end
+      io.puts
+    end
 
     total
-  end
-
-  def output_summary(io)
-    io.puts "%8.1f: %s" % [total, "flog total"]
-    io.puts "%8.1f: %s" % [average, "flog/method average"]
   end
 
   ##
@@ -315,19 +309,16 @@ class Flog < SexpProcessor
     @multiplier -= bonus
   end
 
-  def record_method_score(method, score)
-    @totals ||= Hash.new(0)
-    @totals[method] = score
-  end
-
   ##
   # Report results to #io, STDOUT by default.
 
   def report(io = $stdout)
-    output_summary(io)
+    io.puts "%8.1f: %s" % [total, "flog total"]
+    io.puts "%8.1f: %s" % [average, "flog/method average"]
+
     return if options[:score]
 
-    if options[:all] then # TODO: fix - use option[:all] and THRESHOLD directly
+    if options[:all] then
       output_details(io)
     else
       output_details(io, total * THRESHOLD)
@@ -354,14 +345,7 @@ class Flog < SexpProcessor
     Math.sqrt(a*a + b*b + c*c)
   end
 
-  def summarize_method(meth, tally)
-    return if options[:methods] and meth =~ /##{@@no_method}$/
-    score = score_method(tally)
-    record_method_score(meth, score)
-    increment_total_score_by score
-  end
-
-  def total
+  def total # FIX: I hate this indirectness
     totals unless @total_score # calculates total_score as well
 
     @total_score
@@ -374,10 +358,16 @@ class Flog < SexpProcessor
     unless @totals then
       @total_score = 0
       @totals = Hash.new(0)
+
       calls.each do |meth, tally|
-        summarize_method(meth, tally)
+        next if options[:methods] and meth =~ /##{@@no_method}$/
+        score = score_method(tally)
+
+        @totals[meth] = score
+        @total_score += score
       end
     end
+
     @totals
   end
 
@@ -409,15 +399,9 @@ class Flog < SexpProcessor
     s()
   end
 
-  def process_attrset(exp)
-    add_to_score :assignment
-    raise exp.inspect
-    s()
-  end
-
   def process_block(exp)
     penalize_by 0.1 do
-      analyze_list exp
+      process_until_empty exp
     end
     s()
   end
@@ -461,7 +445,7 @@ class Flog < SexpProcessor
     add_to_score :branch
     process exp.shift # recv
     penalize_by 0.1 do
-      analyze_list exp
+      process_until_empty exp
     end
     s()
   end
@@ -469,14 +453,14 @@ class Flog < SexpProcessor
   def process_class(exp)
     in_klass exp.shift do
       penalize_by 1.0 do
-        supr = process exp.shift
+        process exp.shift # superclass expression
       end
-      analyze_list exp
+      process_until_empty exp
     end
     s()
   end
 
-  def process_dasgn_curr(exp)
+  def process_dasgn_curr(exp) # FIX: remove
     add_to_score :assignment
     exp.shift # name
     process exp.shift # assigment, if any
@@ -487,15 +471,15 @@ class Flog < SexpProcessor
 
   def process_defn(exp)
     in_method exp.shift do
-      analyze_list exp
+      process_until_empty exp
     end
     s()
   end
 
   def process_defs(exp)
-    process exp.shift
-    in_method exp.shift do
-      analyze_list exp
+    recv = process exp.shift
+    in_method "::#{exp.shift}" do
+      process_until_empty exp
     end
     s()
   end
@@ -504,7 +488,7 @@ class Flog < SexpProcessor
   def process_else(exp)
     add_to_score :branch
     penalize_by 0.1 do
-      analyze_list exp
+      process_until_empty exp
     end
     s()
   end
@@ -523,7 +507,7 @@ class Flog < SexpProcessor
 
   def process_iter(exp)
     context = (self.context - [:class, :module, :scope])
-    if context.uniq.sort_by {|s|s.to_s} == [:block, :iter] then
+    if context.uniq.sort_by { |s| s.to_s } == [:block, :iter] then
       recv = exp.first
       if (recv[0] == :call and recv[1] == nil and recv.arglist[1] and
           [:lit, :str].include? recv.arglist[1][0]) then
@@ -531,7 +515,7 @@ class Flog < SexpProcessor
         submsg = recv.arglist[1][1]
         in_method submsg do
           in_klass msg do
-            analyze_list exp
+            process_until_empty exp
           end
         end
         return s()
@@ -540,12 +524,12 @@ class Flog < SexpProcessor
 
     add_to_score :branch
 
-    exp.delete 0
+    exp.delete 0 # TODO: what is this?
 
     process exp.shift # no penalty for LHS
 
     penalize_by 0.1 do
-      analyze_list exp
+      process_until_empty exp
     end
 
     s()
@@ -568,13 +552,13 @@ class Flog < SexpProcessor
 
   def process_masgn(exp)
     add_to_score :assignment
-    analyze_list exp
+    process_until_empty exp
     s()
   end
 
   def process_module(exp)
     in_klass exp.shift do
-      analyze_list exp
+      process_until_empty exp
     end
     s()
   end
@@ -582,7 +566,7 @@ class Flog < SexpProcessor
   def process_sclass(exp)
     penalize_by 0.5 do
       recv = process exp.shift
-      analyze_list exp
+      process_until_empty exp
     end
 
     add_to_score :sclass
@@ -591,7 +575,7 @@ class Flog < SexpProcessor
 
   def process_super(exp)
     add_to_score :super
-    analyze_list exp
+    process_until_empty exp
     s()
   end
 
@@ -608,7 +592,7 @@ class Flog < SexpProcessor
 
   def process_yield(exp)
     add_to_score :yield
-    analyze_list exp
+    process_until_empty exp
     s()
   end
 end
