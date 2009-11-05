@@ -1,0 +1,15 @@
+# -*- ruby -*-
+
+require 'autotest/restart'
+require 'autotest/rcov'
+
+Autotest.add_hook :initialize do |at|
+  at.order = :random
+
+  at.add_mapping(/^spec\/.*_spec\.rb$/) do |filename, _|
+    filename
+  end
+
+  at.libs << ':../../minitest/dev/lib'
+  at.testlib = "minitest/autorun"
+end
