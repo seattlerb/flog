@@ -105,7 +105,7 @@ class TestFlog < MiniTest::Unit::TestCase
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
-    assert_equal 1.6, @flog.total
+    assert_equal 1.6, @flog.total unless @flog.option[:methods]
     assert_equal 4, @flog.mass["-"]
   ensure
     $stdin = old_stdin
@@ -205,11 +205,26 @@ class TestFlog < MiniTest::Unit::TestCase
     @flog.totals["main#something"] = 42.0
 
     o = StringIO.new
-    @flog.output_method_details o, "main#none", @flog.calls["main#none"]
+    n = @flog.output_method_details o, "main#none", @flog.calls["main#none"]
 
-    expected ="     1.6: main#none\n"
+    expected = "     1.6: main#none\n"
 
     assert_equal expected, o.string
+    assert_equal 1.6, n
+  end
+
+  def test_output_method_details_methods
+    @flog.option[:methods] = true
+
+    test_flog
+
+    @flog.totals["main#something"] = 42.0
+
+    o = StringIO.new
+    n = @flog.output_method_details o, "main#none", @flog.calls["main#none"]
+
+    assert_equal "", o.string
+    assert_equal 0, n
   end
 
   def test_output_method_details_detailed
@@ -220,7 +235,7 @@ class TestFlog < MiniTest::Unit::TestCase
     @flog.totals["main#something"] = 42.0
 
     o = StringIO.new
-    @flog.output_method_details o, "main#none", @flog.calls["main#none"]
+    n = @flog.output_method_details o, "main#none", @flog.calls["main#none"]
 
     expected = "     1.6: main#none
      1.0:   +
@@ -229,6 +244,7 @@ class TestFlog < MiniTest::Unit::TestCase
 "
 
     assert_equal expected, o.string
+    assert_equal 1.6, n
   end
 
   # def test_process_until_empty
@@ -470,7 +486,7 @@ class TestFlog < MiniTest::Unit::TestCase
     o = StringIO.new
     @flog.report o
 
-    expected ="     1.6: flog total
+    expected = "     1.6: flog total
      1.6: flog/method average
 
      1.6: main#none

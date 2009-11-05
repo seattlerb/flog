@@ -187,6 +187,9 @@ class Flog < SexpProcessor
     end
   end
 
+  ##
+  # Adds name to the class stack, for the duration of the block
+
   def in_klass name
     @class_stack.unshift name
     yield
@@ -194,7 +197,7 @@ class Flog < SexpProcessor
   end
 
   ##
-  # Adds name to the list of methods, for the duration of the block
+  # Adds name to the method stack, for the duration of the block
 
   def in_method name
     @method_stack.unshift name
@@ -214,7 +217,7 @@ class Flog < SexpProcessor
   end
 
   ##
-  # returns the first class in the list, or @@no_class if there are
+  # Returns the first class in the list, or @@no_class if there are
   # none.
 
   def klass_name
@@ -236,7 +239,7 @@ class Flog < SexpProcessor
   end
 
   ##
-  # returns the first method in the list, or @@no_method if there are
+  # Returns the first method in the list, or @@no_method if there are
   # none.
 
   def method_name
@@ -279,7 +282,7 @@ class Flog < SexpProcessor
   end
 
   def output_method_details(io, class_method, call_list)
-    # return 0 if option[:methods] and class_method =~ /##{@@no_method}/
+    return 0 if option[:methods] and class_method =~ /##{@@no_method}/
 
     total = totals[class_method]
     io.puts "%8.1f: %s" % [total, class_method]
