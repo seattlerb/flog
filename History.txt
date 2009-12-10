@@ -1,3 +1,25 @@
+=== 2.3.0 / 2009-12-09
+
+* 1 major enhancement:
+
+  * Added file:line info to the flog report (Marty Andrews)
+
+* 13 minor enhancements:
+
+  * Added .autotest.
+  * Deleted pre-gauntlet scripts.
+  * Flog#method_name now at least tries show when it is a class method.
+  * Flog.parse_options now takes args directly.
+  * Removed Flog#increment_total_score_by.
+  * Removed Flog#output_summary.
+  * Removed Flog#process_attrset.
+  * Removed Flog#record_method_score.
+  * Removed Flog#summarize_method.
+  * Removed Flog::default_options.
+  * Renamed Flog#analyze_list to process_until_empty.
+  * Renamed Flog#options to #option
+  * Rewrote entire test suite (3100 lines down!). Cleaner and less brittle.
+
 === 2.2.0 / 2009-08-14
 
 * 1 minor enhancement:
