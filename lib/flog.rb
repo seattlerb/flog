@@ -70,6 +70,7 @@ class Flog < SexpProcessor
 
   attr_accessor :multiplier
   attr_reader :calls, :option, :class_stack, :method_stack, :mass
+  attr_reader :method_locations
 
   # REFACTOR: from flay
   def self.expand_dirs_to_files *dirs
@@ -143,9 +144,6 @@ class Flog < SexpProcessor
   end
 
   def add_to_score name, score = OTHER_SCORES[name]
-    m = method_name
-    m = "#none" if m == @@no_method
-    signature = "#{klass_name}#{m}" # FIX: ugly
     @calls[signature][name] += score * @multiplier
   end
 
@@ -199,8 +197,10 @@ class Flog < SexpProcessor
   ##
   # Adds name to the method stack, for the duration of the block
 
-  def in_method name
+  def in_method(name, file, line)
     @method_stack.unshift name
+    # "#{klass_name}##{name}"
+    @method_locations[signature] = "#{file}:#{line}"
     yield
     @method_stack.shift
   end
@@ -210,6 +210,7 @@ class Flog < SexpProcessor
     @option              = option
     @class_stack         = []
     @method_stack        = []
+    @method_locations    = {}
     @mass                = {}
     @parser              = RubyParser.new
     self.auto_shift_type = true
@@ -269,7 +270,12 @@ class Flog < SexpProcessor
         io.puts
         io.puts "%8.1f: %s" % [total, "#{klass} total"]
         methods[klass].each do |name, score|
-          io.puts "%8.1f: %s" % [score, name]
+          location = @method_locations[name]
+          if location then
+            io.puts "%8.1f: %-32s %s" % [score, name, location]
+          else
+            io.puts "%8.1f: %s" % [score, name]
+          end
         end
       end
     else
@@ -285,7 +291,13 @@ class Flog < SexpProcessor
     return 0 if option[:methods] and class_method =~ /##{@@no_method}/
 
     total = totals[class_method]
-    io.puts "%8.1f: %s" % [total, class_method]
+
+    location = @method_locations[class_method]
+    if location then
+      io.puts "%8.1f: %-32s %s" % [total, class_method, location]
+    else
+      io.puts "%8.1f: %s" % [total, class_method]
+    end
 
     if option[:details] then
       call_list.sort_by { |k,v| -v }.each do |call, count|
@@ -343,6 +355,12 @@ class Flog < SexpProcessor
       end
     end
     Math.sqrt(a*a + b*b + c*c)
+  end
+
+  def signature
+    m = method_name
+    m = "#none" if m == @@no_method
+    "#{klass_name}#{m}" # FIX: ugly
   end
 
   def total # FIX: I hate this indirectness
@@ -470,7 +488,7 @@ class Flog < SexpProcessor
   alias :process_lasgn :process_dasgn_curr
 
   def process_defn(exp)
-    in_method exp.shift do
+    in_method exp.shift, exp.file, exp.line do
       process_until_empty exp
     end
     s()
@@ -478,7 +496,7 @@ class Flog < SexpProcessor
 
   def process_defs(exp)
     recv = process exp.shift
-    in_method "::#{exp.shift}" do
+    in_method "::#{exp.shift}", exp.file, exp.line do
       process_until_empty exp
     end
     s()
@@ -509,12 +527,14 @@ class Flog < SexpProcessor
     context = (self.context - [:class, :module, :scope])
     if context.uniq.sort_by { |s| s.to_s } == [:block, :iter] then
       recv = exp.first
+
+      # DSL w/ names. eg task :name do ... end
       if (recv[0] == :call and recv[1] == nil and recv.arglist[1] and
           [:lit, :str].include? recv.arglist[1][0]) then
         msg = recv[2]
         submsg = recv.arglist[1][1]
-        in_method submsg do
-          in_klass msg do
+        in_klass msg do                           # :task
+          in_method submsg, exp.file, exp.line do # :name
             process_until_empty exp
           end
         end

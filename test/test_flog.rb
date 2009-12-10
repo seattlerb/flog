@@ -139,11 +139,14 @@ class TestFlog < MiniTest::Unit::TestCase
   def test_in_method
     assert_empty @flog.method_stack
 
-    @flog.in_method "xxx" do
+    @flog.in_method "xxx", "file.rb", 42 do
       assert_equal ["xxx"], @flog.method_stack
     end
 
     assert_empty @flog.method_stack
+
+    expected = {"main#xxx" => "file.rb:42"}
+    assert_equal expected, @flog.method_locations
   end
 
   def test_klass_name
