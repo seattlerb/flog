@@ -1,3 +1,16 @@
+=== 2.4.0 / 2009-12-15
+
+* 4 minor enhancements:
+
+  * Cleaned method_name to return "#method" or "::method".
+  * DSL reporting now handles regexp literals for 'method' names (Marty Andrews)
+  * Improved tests for process_iter's myriad complexities.
+  * More doco!
+
+* 1 bug fix:
+
+  * Fixed DSL reporting excluding solo-blocks. (eg a single rake task)
+
 === 2.3.0 / 2009-12-09
 
 * 1 major enhancement:
