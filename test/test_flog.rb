@@ -167,14 +167,14 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_method_name
-    assert_equal :none, @flog.method_name
+    assert_equal "#none", @flog.method_name
 
     @flog.method_stack << "whatevs"
     assert_equal "#whatevs", @flog.method_name
   end
 
   def test_method_name_cls
-    assert_equal :none, @flog.method_name
+    assert_equal "#none", @flog.method_name
 
     @flog.method_stack << "::whatevs"
     assert_equal "::whatevs", @flog.method_name
@@ -403,6 +403,36 @@ class TestFlog < MiniTest::Unit::TestCase
     util_process sexp, 2.326, :loop => 1.0, :branch => 2.1
   end
 
+  def test_process_iter_dsl
+    # task :blah do
+    #   something
+    # end
+
+    sexp = s(:iter,
+             s(:call, nil, :task, s(:arglist, s(:lit, :blah))),
+             nil,
+             s(:call, nil, :something, s(:arglist)))
+
+    @klass, @meth = "task", "#blah"
+
+    util_process sexp, 2.0, :something => 1.0, :task => 1.0
+  end
+
+  def test_process_iter_dsl_regexp
+    # task /regexp/ do
+    #   something
+    # end
+
+    sexp = s(:iter,
+             s(:call, nil, :task, s(:arglist, s(:lit, /regexp/))),
+             nil,
+             s(:call, nil, :something, s(:arglist)))
+
+    @klass, @meth = "task", "#/regexp/"
+
+    util_process sexp, 2.0, :something => 1.0, :task => 1.0
+  end
+
   def test_process_lit
     sexp = s(:lit, :y)
     util_process sexp, 0.0
@@ -511,6 +541,19 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal 2.0, @flog.score_method(:branch     => 2.0)
     assert_equal 5.0, @flog.score_method(:blah       => 3.0, # distance formula
                                          :branch     => 4.0)
+  end
+
+  def test_signature
+    assert_equal "main#none", @flog.signature
+
+    @flog.class_stack << "X"
+    assert_equal "X#none", @flog.signature
+
+    @flog.method_stack << "y"
+    assert_equal "X#y", @flog.signature
+
+    @flog.class_stack.shift
+    assert_equal "main#y", @flog.signature
   end
 
   def test_total

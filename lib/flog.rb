@@ -198,8 +198,8 @@ class Flog < SexpProcessor
   # Adds name to the method stack, for the duration of the block
 
   def in_method(name, file, line)
-    @method_stack.unshift name
-    # "#{klass_name}##{name}"
+    method_name = Regexp === name ? name.inspect : name.to_s
+    @method_stack.unshift method_name
     @method_locations[signature] = "#{file}:#{line}"
     yield
     @method_stack.shift
@@ -245,7 +245,7 @@ class Flog < SexpProcessor
 
   def method_name
     m = @method_stack.first || @@no_method
-    m = "##{m}" unless m =~ /::/ unless m == @@no_method # FIX
+    m = "##{m}" unless m =~ /::/
     m
   end
 
@@ -358,9 +358,7 @@ class Flog < SexpProcessor
   end
 
   def signature
-    m = method_name
-    m = "#none" if m == @@no_method
-    "#{klass_name}#{m}" # FIX: ugly
+    "#{klass_name}#{method_name}"
   end
 
   def total # FIX: I hate this indirectness
@@ -525,7 +523,9 @@ class Flog < SexpProcessor
 
   def process_iter(exp)
     context = (self.context - [:class, :module, :scope])
-    if context.uniq.sort_by { |s| s.to_s } == [:block, :iter] then
+    context = context.uniq.sort_by { |s| s.to_s }
+
+    if context == [:block, :iter] or context == [:iter] then
       recv = exp.first
 
       # DSL w/ names. eg task :name do ... end
