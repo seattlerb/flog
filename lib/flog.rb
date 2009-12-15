@@ -4,14 +4,14 @@ require 'ruby_parser'
 require 'optparse'
 
 class Flog < SexpProcessor
-  VERSION = '2.3.0'
+  VERSION = '2.3.1'
 
   THRESHOLD = 0.60
   SCORES = Hash.new 1
   BRANCHING = [ :and, :case, :else, :if, :or, :rescue, :until, :when, :while ]
 
   ##
-  # various non-call constructs
+  # Various non-call constructs
 
   OTHER_SCORES = {
     :alias          => 2,
@@ -28,7 +28,7 @@ class Flog < SexpProcessor
   }
 
   ##
-  # eval forms
+  # Eval forms
 
   SCORES.merge!(:define_method => 5,
                 :eval          => 5,
@@ -37,7 +37,7 @@ class Flog < SexpProcessor
                 :instance_eval => 5)
 
   ##
-  # various "magic" usually used for "clever code"
+  # Various "magic" usually used for "clever code"
 
   SCORES.merge!(:alias_method               => 2,
                 :extend                     => 2,
@@ -61,7 +61,7 @@ class Flog < SexpProcessor
                 :undef_method               => 2)
 
   ##
-  # calls I don't like and usually see being abused
+  # Calls that are ALMOST ALWAYS ABUSED!
 
   SCORES.merge!(:inject => 2)
 
@@ -143,21 +143,26 @@ class Flog < SexpProcessor
     option
   end
 
+  ##
+  # Add a score to the tally. Score can be predetermined or looked up
+  # automatically. Uses multiplier for additional spankings.
+  # Spankings!
+
   def add_to_score name, score = OTHER_SCORES[name]
     @calls[signature][name] += score * @multiplier
   end
 
   ##
-  # Process each element of #exp in turn.
-
-  def process_until_empty exp
-    process exp.shift until exp.empty?
-  end
+  # really?
 
   def average
     return 0 if calls.size == 0
     total / calls.size
   end
+
+  ##
+  # Flog the given files or directories. Smart. Deals with "-", syntax
+  # errors, and traversing subdirectories intelligently.
 
   def flog(*files_or_dirs)
     files = Flog.expand_dirs_to_files(*files_or_dirs)
@@ -240,7 +245,7 @@ class Flog < SexpProcessor
   end
 
   ##
-  # Returns the first method in the list, or @@no_method if there are
+  # Returns the first method in the list, or "#none" if there are
   # none.
 
   def method_name
@@ -248,6 +253,9 @@ class Flog < SexpProcessor
     m = "##{m}" unless m =~ /::/
     m
   end
+
+  ##
+  # Output the report up to a given max or report everything, if nil.
 
   def output_details(io, max = nil)
     my_totals = totals
@@ -287,13 +295,16 @@ class Flog < SexpProcessor
     end
   end
 
+  ##
+  # Output the details for a method
+
   def output_method_details(io, class_method, call_list)
     return 0 if option[:methods] and class_method =~ /##{@@no_method}/
 
     total = totals[class_method]
 
     location = @method_locations[class_method]
-    if location then
+    if location then # REFACTOR
       io.puts "%8.1f: %-32s %s" % [total, class_method, location]
     else
       io.puts "%8.1f: %s" % [total, class_method]
@@ -322,6 +333,13 @@ class Flog < SexpProcessor
   end
 
   ##
+  # Process each element of #exp in turn.
+
+  def process_until_empty exp
+    process exp.shift until exp.empty?
+  end
+
+  ##
   # Report results to #io, STDOUT by default.
 
   def report(io = $stdout)
@@ -339,11 +357,17 @@ class Flog < SexpProcessor
     self.reset
   end
 
+  ##
+  # Reset score data
+
   def reset
     @totals     = @total_score = nil
     @multiplier = 1.0
     @calls      = Hash.new { |h,k| h[k] = Hash.new 0 }
   end
+
+  ##
+  # Compute the distance formula for a given tally
 
   def score_method(tally)
     a, b, c = 0, 0, 0
