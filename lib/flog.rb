@@ -456,6 +456,8 @@ class Flog < SexpProcessor
       # do nothing
     when :lit, :call then
       add_to_score :to_proc_normal
+    when :lasgn then # blah(&l = proc { ... })
+      add_to_score :to_proc_icky!, 15
     when :iter, :dsym, :dstr, *BRANCHING then
       add_to_score :to_proc_icky!
     else
