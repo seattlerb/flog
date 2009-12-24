@@ -459,7 +459,7 @@ class Flog < SexpProcessor
     when :iter, :dsym, :dstr, *BRANCHING then
       add_to_score :to_proc_icky!
     else
-      raise({:block_pass_even_ickier! => [arg, call]}.inspect)
+      raise({:block_pass_even_ickier! => arg}.inspect)
     end
 
     process arg
