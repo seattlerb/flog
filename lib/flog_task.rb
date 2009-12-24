@@ -21,7 +21,7 @@ class FlogTask < Rake::TaskLib
     desc "Analyze for code complexity in: #{dirs.join(', ')}"
     task name do
       flog = Flog.new
-      flog.flog_files(*dirs)
+      flog.flog(*dirs)
       flog.report if verbose
 
       raise "Flog total too high! #{flog.total} > #{threshold}" if
