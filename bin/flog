@@ -3,6 +3,8 @@
 require 'optparse'
 require 'flog'
 
+Flog.load_plugins
+
 options = Flog.parse_options ARGV
 
 ARGV << "-" if ARGV.empty?

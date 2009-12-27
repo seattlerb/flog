@@ -23,6 +23,7 @@ class Flog < SexpProcessor
     :sclass         => 5,
     :super          => 1,
     :to_proc_icky!  => 10,
+    :to_proc_lasgn  => 15,
     :to_proc_normal => 5,
     :yield          => 1,
   }
@@ -72,6 +73,41 @@ class Flog < SexpProcessor
   attr_reader :calls, :option, :class_stack, :method_stack, :mass
   attr_reader :method_locations
 
+  def self.plugins
+    @plugins ||= {}
+  end
+
+  # TODO: I think I want to do this more like hoe's plugin system. Generalize?
+  def self.load_plugins
+    loaded, found = {}, {}
+
+    Gem.find_files("flog/*.rb").reverse.each do |path|
+      found[File.basename(path, ".rb").intern] = path
+    end
+
+    found.each do |name, plugin|
+      next if loaded[name]
+      begin
+        warn "loading #{plugin}" # if $DEBUG
+        loaded[name] = load plugin
+      rescue LoadError => e
+        warn "error loading #{plugin.inspect}: #{e.message}. skipping..."
+      end
+    end
+
+    self.plugins.merge loaded
+
+    names = Flog.constants.map {|s| s.to_s}.reject {|n| n =~ /^[A-Z_]+$/}
+
+    names.each do |name|
+      # next unless Hoe.plugins.include? name.downcase.intern
+      mod = Flog.const_get(name)
+      next if Class === mod
+      warn "extend #{mod}" if $DEBUG
+      # self.extend mod
+    end
+  end
+
   # REFACTOR: from flay
   def self.expand_dirs_to_files *dirs
     extensions = ['rb']
@@ -92,6 +128,8 @@ class Flog < SexpProcessor
     }
 
     OptionParser.new do |opts|
+      opts.separator "Standard options:"
+
       opts.on("-a", "--all", "Display all flog results, not top 60%.") do
         option[:all] = true
       end
@@ -138,6 +176,16 @@ class Flog < SexpProcessor
       opts.on("-v", "--verbose", "Display progress during processing.") do
         option[:verbose] = true
       end
+
+      next if self.plugins.empty?
+      opts.separator "Plugin options:"
+
+      extra = self.methods.grep(/parse_options/) - %w(parse_options)
+
+      extra.sort.each do |msg|
+        self.send msg, opts, option
+      end
+
     end.parse! Array(args)
 
     option
@@ -158,6 +206,23 @@ class Flog < SexpProcessor
   def average
     return 0 if calls.size == 0
     total / calls.size
+  end
+
+  ##
+  # Iterate over the calls sorted (descending) by score.
+
+  def each_by_score max = nil
+    my_totals = totals
+    current   = 0
+
+    calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
+      score = my_totals[class_method]
+
+      yield class_method, score, call_list
+
+      current += score
+      break if max and current >= max
+    end
   end
 
   ##
@@ -257,67 +322,46 @@ class Flog < SexpProcessor
   ##
   # Output the report up to a given max or report everything, if nil.
 
-  def output_details(io, max = nil)
-    my_totals = totals
-    current = 0
+  def output_details io, max = nil
+    io.puts
 
-    if option[:group] then
-      scores = Hash.new 0
-      methods = Hash.new { |h,k| h[k] = [] }
+    each_by_score max do |class_method, score, call_list|
+      return 0 if option[:methods] and class_method =~ /##{@@no_method}/
+      self.print_score io, class_method, score
 
-      calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
-        klass = class_method.split(/#/).first
-        score = totals[class_method]
-        methods[klass] << [class_method, score]
-        scores[klass] += score
-        current += score
-        break if max and current >= max
-      end
-
-      scores.sort_by { |_, n| -n }.each do |klass, total|
-        io.puts
-        io.puts "%8.1f: %s" % [total, "#{klass} total"]
-        methods[klass].each do |name, score|
-          location = @method_locations[name]
-          if location then
-            io.puts "%8.1f: %-32s %s" % [score, name, location]
-          else
-            io.puts "%8.1f: %s" % [score, name]
-          end
+      if option[:details] then
+        call_list.sort_by { |k,v| -v }.each do |call, count|
+          io.puts "  %6.1f:   %s" % [count, call]
         end
-      end
-    else
-      io.puts
-      calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
-        current += output_method_details(io, class_method, call_list)
-        break if max and current >= max
+        io.puts
       end
     end
+    # io.puts
   end
 
   ##
-  # Output the details for a method
+  # Output the report, grouped by class/module, up to a given max or
+  # report everything, if nil.
 
-  def output_method_details(io, class_method, call_list)
-    return 0 if option[:methods] and class_method =~ /##{@@no_method}/
+  def output_details_grouped io, max = nil
+    scores  = Hash.new 0
+    methods = Hash.new { |h,k| h[k] = [] }
 
-    total = totals[class_method]
+    each_by_score max do |class_method, score, call_list|
+      klass = class_method.split(/#|::/).first
 
-    location = @method_locations[class_method]
-    if location then # REFACTOR
-      io.puts "%8.1f: %-32s %s" % [total, class_method, location]
-    else
-      io.puts "%8.1f: %s" % [total, class_method]
+      methods[klass] << [class_method, score]
+      scores[klass]  += score
     end
 
-    if option[:details] then
-      call_list.sort_by { |k,v| -v }.each do |call, count|
-        io.puts "  %6.1f:   %s" % [count, call]
-      end
+    scores.sort_by { |_, n| -n }.each do |klass, total|
       io.puts
-    end
 
-    total
+      io.puts "%8.1f: %s" % [total, "#{klass} total"]
+      methods[klass].each do |name, score|
+        self.print_score io, name, score
+      end
+    end
   end
 
   ##
@@ -330,6 +374,18 @@ class Flog < SexpProcessor
     @multiplier += bonus
     yield
     @multiplier -= bonus
+  end
+
+  ##
+  # Print out one formatted score.
+
+  def print_score io, name, score
+    location = @method_locations[name]
+    if location then
+      io.puts "%8.1f: %-32s %s" % [score, name, location]
+    else
+      io.puts "%8.1f: %s" % [score, name]
+    end
   end
 
   ##
@@ -348,10 +404,11 @@ class Flog < SexpProcessor
 
     return if option[:score]
 
-    if option[:all] then
-      output_details(io)
+    max = option[:all] ? nil : total * THRESHOLD
+    if option[:group] then
+      output_details_grouped io, max
     else
-      output_details(io, total * THRESHOLD)
+      output_details io, max
     end
   ensure
     self.reset
@@ -457,7 +514,7 @@ class Flog < SexpProcessor
     when :lit, :call then
       add_to_score :to_proc_normal
     when :lasgn then # blah(&l = proc { ... })
-      add_to_score :to_proc_icky!, 15
+      add_to_score :to_proc_lasgn
     when :iter, :dsym, :dstr, *BRANCHING then
       add_to_score :to_proc_icky!
     else
@@ -585,7 +642,8 @@ class Flog < SexpProcessor
     value = exp.shift
     case value
     when 0, -1 then
-      # ignore those because they're used as array indicies instead of first/last
+      # ignore those because they're used as array indicies instead of
+      # first/last
     when Integer then
       add_to_score :lit_fixnum
     when Float, Symbol, Regexp, Range then
