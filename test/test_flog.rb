@@ -28,7 +28,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_cls_expand_dirs_to_files
-    expected = %w(lib/flog.rb lib/flog/perforce.rb lib/flog_task.rb lib/gauntlet_flog.rb)
+    expected = %w(lib/flog.rb lib/flog_task.rb lib/gauntlet_flog.rb)
     assert_equal expected, Flog.expand_dirs_to_files('lib')
     expected = %w(Rakefile)
     assert_equal expected, Flog.expand_dirs_to_files('Rakefile')
