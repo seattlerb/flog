@@ -1,3 +1,20 @@
+=== 2.5.0 / 2010-09-01
+
+* 1 major enhancement:
+
+  * Added plugin system. Define a module under Flog to extend it.
+
+* 3 minor enhancements:
+
+  * Added special case penalty for wtf to_proc: blah(&b = proc {...}) (benjaminb)
+  * Improved tests and test coverage.
+  * Unfactored & refactored report code. Much cleaner and  more maintainable now.
+
+* 2 bug fixes:
+
+  * Fixed API change for FlogTask (andreacampi)
+  * Fixed bad edgecase handler for block_pass (benjaminb)
+
 === 2.4.0 / 2009-12-15
 
 * 4 minor enhancements:

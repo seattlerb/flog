@@ -4,7 +4,7 @@ require 'ruby_parser'
 require 'optparse'
 
 class Flog < SexpProcessor
-  VERSION = '2.4.0'
+  VERSION = '2.5.0'
 
   THRESHOLD = 0.60
   SCORES = Hash.new 1
