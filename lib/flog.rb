@@ -292,21 +292,24 @@ class Flog < SexpProcessor
   # none.
 
   def klass_name
-    name = @class_stack.first || @@no_class
+    name = @class_stack.first
     if Sexp === name then
-      name = case name.first
-             when :colon2 then
-               name = name.flatten
-               name.delete :const
-               name.delete :colon2
-               name.join("::")
-             when :colon3 then
-               name.last.to_s
-             else
-               name
-             end
+      case name.first
+      when :colon2 then
+        name = name.flatten
+        name.delete :const
+        name.delete :colon2
+        name.join("::")
+      when :colon3 then
+        name.last.to_s
+      else
+        name
+      end
+    elsif @class_stack.any?
+      @class_stack.reverse.join("::")
+    else
+      @@no_class
     end
-    name
   end
 
   ##

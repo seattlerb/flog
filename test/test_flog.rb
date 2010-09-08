@@ -8,16 +8,16 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_add_to_score
     assert_empty @flog.calls
-    @flog.class_stack  << "MyKlass"
+    @flog.class_stack  << "Base" << "MyKlass"
     @flog.method_stack << "mymethod"
     @flog.add_to_score "blah", 42
 
-    expected = {"MyKlass#mymethod" => {"blah" => 42.0}}
+    expected = {"MyKlass::Base#mymethod" => {"blah" => 42.0}}
     assert_equal expected, @flog.calls
 
     @flog.add_to_score "blah", 2
 
-    expected["MyKlass#mymethod"]["blah"] = 44.0
+    expected["MyKlass::Base#mymethod"]["blah"] = 44.0
     assert_equal expected, @flog.calls
   end
 
@@ -129,8 +129,8 @@ class TestFlog < MiniTest::Unit::TestCase
   def test_in_klass
     assert_empty @flog.class_stack
 
-    @flog.in_klass "xxx" do
-      assert_equal ["xxx"], @flog.class_stack
+    @flog.in_klass "xxx::yyy" do
+      assert_equal ["xxx::yyy"], @flog.class_stack
     end
 
     assert_empty @flog.class_stack
@@ -152,8 +152,8 @@ class TestFlog < MiniTest::Unit::TestCase
   def test_klass_name
     assert_equal :main, @flog.klass_name
 
-    @flog.class_stack << "whatevs"
-    assert_equal "whatevs", @flog.klass_name
+    @flog.class_stack << "whatevs" << "flog"
+    assert_equal "flog::whatevs", @flog.klass_name
   end
 
   def test_klass_name_sexp
