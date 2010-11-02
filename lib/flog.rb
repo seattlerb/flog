@@ -512,7 +512,7 @@ class Flog < SexpProcessor
     add_to_score :block_pass
 
     case arg.first
-    when :lvar, :dvar, :ivar, :cvar, :self, :const, :nil then
+    when :lvar, :dvar, :ivar, :cvar, :self, :const, :colon2, :nil then
       # do nothing
     when :lit, :call then
       add_to_score :to_proc_normal

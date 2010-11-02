@@ -305,6 +305,17 @@ class TestFlog < MiniTest::Unit::TestCase
                  :to_proc_normal => 6.0)
   end
 
+  def test_process_block_pass_colon2
+    sexp = s(:call, nil, :a,
+             s(:arglist,
+               s(:block_pass,
+                 s(:colon2, s(:const, :A), :B))))
+
+    util_process(sexp, 2.2,
+                 :a              => 1.0,
+                 :block_pass     => 1.2)
+  end
+
   def test_process_block_pass_iter
     sexp = s(:block_pass,
              s(:iter, s(:call, nil, :lambda, s(:arglist)), nil, s(:lit, 1)))
