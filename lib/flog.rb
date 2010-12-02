@@ -242,12 +242,15 @@ class Flog < SexpProcessor
         next unless ast
         mass[file] = ast.mass
         process ast
-      rescue SyntaxError, Racc::ParseError => e
+      rescue RegexpError, SyntaxError, Racc::ParseError => e
         if e.inspect =~ /<%|%>/ or ruby =~ /<%|%>/ then
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
         else
-          raise e unless option[:continue]
+          unless option[:continue] then
+            warn "ERROR! Aborting. You may want to run with --continue."
+            raise e
+          end
           warn file
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
         end
