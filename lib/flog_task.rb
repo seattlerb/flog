@@ -20,6 +20,7 @@ class FlogTask < Rake::TaskLib
   def define
     desc "Analyze for code complexity in: #{dirs.join(', ')}"
     task name do
+      require "flog"
       flog = Flog.new
       flog.flog(*dirs)
       flog.report if verbose
