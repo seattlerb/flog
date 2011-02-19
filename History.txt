@@ -1,3 +1,15 @@
+=== 2.5.1 / 2011-02-18
+
+* 3 minor enhancements:
+
+  * Added RegexpError to error handler.
+  * Improved error output and suggest --continue
+  * Record the flog score for the full class name, not just suffix. (dkubb)
+
+* 1 bug fix:
+
+  * Fixed block_pass when passed a multi-level const (xavier)
+
 === 2.5.0 / 2010-09-01
 
 * 1 major enhancement:
