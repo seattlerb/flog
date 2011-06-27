@@ -1,7 +1,8 @@
 = flog
 
-* http://ruby.sadi.st/
-* http://rubyforge.org/projects/seattlerb
+home :: http://ruby.sadi.st/
+repo :: https://github.com/seattlerb/flog
+rdoc :: http://seattlerb.rubyforge.org/flog
 
 == DESCRIPTION:
 
@@ -36,7 +37,7 @@ report. The higher the score, the more pain the code is in.
 
 (The MIT License)
 
-Copyright (c) 2007-2009 Ryan Davis, Seattle.rb
+Copyright (c) Ryan Davis, seattle.rb
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
