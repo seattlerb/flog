@@ -247,12 +247,13 @@ class Flog < SexpProcessor
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
         else
+          warn "ERROR: parsing ruby file #{file}"
           unless option[:continue] then
             warn "ERROR! Aborting. You may want to run with --continue."
             raise e
           end
-          warn file
-          warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
+          warn "#{e.class}: #{e.message.strip} at:"
+          warn "  #{e.backtrace.first(5).join("\n  ")}"
         end
       end
     end
