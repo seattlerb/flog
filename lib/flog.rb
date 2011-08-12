@@ -535,11 +535,11 @@ class Flog < SexpProcessor
 
   def process_call(exp)
     penalize_by 0.2 do
-      recv = process exp.shift
+      process exp.shift # recv
     end
     name = exp.shift
     penalize_by 0.2 do
-      args = process exp.shift
+      process exp.shift # args
     end
 
     add_to_score name, SCORES[name]
@@ -583,7 +583,7 @@ class Flog < SexpProcessor
   end
 
   def process_defs(exp)
-    recv = process exp.shift
+    process exp.shift # recv
     in_method "::#{exp.shift}", exp.file, exp.line do
       process_until_empty exp
     end
@@ -676,7 +676,7 @@ class Flog < SexpProcessor
 
   def process_sclass(exp)
     penalize_by 0.5 do
-      recv = process exp.shift
+      process exp.shift # recv
       process_until_empty exp
     end
 
