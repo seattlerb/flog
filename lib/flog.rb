@@ -263,6 +263,20 @@ class Flog < SexpProcessor
   # Adds name to the class stack, for the duration of the block
 
   def in_klass name
+    if Sexp === name then
+      name = case name.first
+             when :colon2 then
+               name = name.flatten
+               name.delete :const
+               name.delete :colon2
+               name.join("::")
+             when :colon3 then
+               name.last.to_s
+             else
+               raise "unknown type #{name.inspect}"
+             end
+    end
+
     @class_stack.unshift name
     yield
     @class_stack.shift
@@ -297,18 +311,9 @@ class Flog < SexpProcessor
 
   def klass_name
     name = @class_stack.first
+
     if Sexp === name then
-      case name.first
-      when :colon2 then
-        name = name.flatten
-        name.delete :const
-        name.delete :colon2
-        name.join("::")
-      when :colon3 then
-        name.last.to_s
-      else
-        name
-      end
+      raise "you shouldn't see me"
     elsif @class_stack.any?
       @class_stack.reverse.join("::")
     else
@@ -334,6 +339,7 @@ class Flog < SexpProcessor
 
     each_by_score max do |class_method, score, call_list|
       return 0 if option[:methods] and class_method =~ /##{@@no_method}/
+
       self.print_score io, class_method, score
 
       if option[:details] then
@@ -365,6 +371,7 @@ class Flog < SexpProcessor
       io.puts
 
       io.puts "%8.1f: %s" % [total, "#{klass} total"]
+
       methods[klass].each do |name, score|
         self.print_score io, name, score
       end
