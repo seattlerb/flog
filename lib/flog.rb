@@ -3,6 +3,14 @@ require 'sexp_processor'
 require 'ruby_parser'
 require 'optparse'
 
+class File
+  RUBY19 = "<3".respond_to? :encoding
+
+  class << self
+    alias :binread :read unless RUBY19
+  end
+end
+
 class Flog < SexpProcessor
   VERSION = '2.5.3'
 
@@ -235,7 +243,7 @@ class Flog < SexpProcessor
     files.each do |file|
       begin
         # TODO: replace File.open to deal with "-"
-        ruby = file == '-' ? $stdin.read : File.read(file)
+        ruby = file == '-' ? $stdin.read : File.binread(file)
         warn "** flogging #{file}" if option[:verbose]
 
         ast = @parser.process(ruby, file)
@@ -300,7 +308,7 @@ class Flog < SexpProcessor
     @method_stack        = []
     @method_locations    = {}
     @mass                = {}
-    @parser              = RubyParser.new
+    @parser              = Ruby18Parser.new
     self.auto_shift_type = true
     self.reset
   end

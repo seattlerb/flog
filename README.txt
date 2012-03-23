@@ -27,7 +27,7 @@ report. The higher the score, the more pain the code is in.
 == REQUIREMENTS:
 
 * ruby2ruby (only for -v)
-* ParseTree (soon to switch to ruby_parser)
+* ruby_parser
 
 == INSTALL:
 
