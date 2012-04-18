@@ -1,10 +1,13 @@
 # -*- ruby -*-
 
 require 'autotest/restart'
-require 'autotest/rcov'
+require 'autotest/rcov' if ENV['RCOV']
 
 Autotest.add_hook :initialize do |at|
   at.order = :random
+
+  at.libs << ":../../ruby_parser/dev/lib"
+  at.libs << ":../../sexp_processor/dev/lib"
 
   at.add_mapping(/^spec\/.*_spec\.rb$/) do |filename, _|
     filename

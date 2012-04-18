@@ -106,7 +106,7 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal exp, @flog.calls
 
     assert_equal 1.6, @flog.total unless @flog.option[:methods]
-    assert_equal 4, @flog.mass["-"] # HACK: 3 is for an unpublished sexp fmt
+    assert_equal 3, @flog.mass["-"]
   ensure
     $stdin = old_stdin
   end
@@ -562,7 +562,7 @@ class TestFlog < MiniTest::Unit::TestCase
     @flog.option[:all] = true
 
     assert_equal 1.6, @flog.total unless @flog.option[:methods]
-    assert_equal 4, @flog.mass["-"] # HACK: 3 is for an unpublished sexp fmt
+    assert_equal 3, @flog.mass["-"]
 
     o = StringIO.new
     @flog.report o
