@@ -133,6 +133,7 @@ class Flog < SexpProcessor
     option = {
       :quiet    => true,
       :continue => false,
+      :parser   => RubyParser,
     }
 
     OptionParser.new do |opts|
@@ -183,6 +184,14 @@ class Flog < SexpProcessor
 
       opts.on("-v", "--verbose", "Display progress during processing.") do
         option[:verbose] = true
+      end
+
+      opts.on("--18", "Use a ruby 1.8 parser.") do
+        option[:parser] = Ruby18Parser
+      end
+
+      opts.on("--19", "Use a ruby 1.9 parser.") do
+        option[:parser] = Ruby19Parser
       end
 
       next if self.plugins.empty?
@@ -251,7 +260,7 @@ class Flog < SexpProcessor
         mass[file] = ast.mass
         process ast
       rescue RegexpError, SyntaxError, Racc::ParseError => e
-        if e.inspect =~ /<%|%>/ or ruby =~ /<%|%>/ then
+        if e.inspect =~ /<\%|%\>/ or ruby =~ /<\%|%\>/ then
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
         else
@@ -308,7 +317,7 @@ class Flog < SexpProcessor
     @method_stack        = []
     @method_locations    = {}
     @mass                = {}
-    @parser              = Ruby18Parser.new
+    @parser              = option[:parser].new
     self.auto_shift_type = true
     self.reset
   end
@@ -514,7 +523,7 @@ class Flog < SexpProcessor
     add_to_score :assignment
     process exp.shift # lhs
     exp.shift # name
-    process exp.shift # rhs
+    process_until_empty exp # rhs
     s()
   end
 
@@ -552,9 +561,11 @@ class Flog < SexpProcessor
     penalize_by 0.2 do
       process exp.shift # recv
     end
+
     name = exp.shift
+
     penalize_by 0.2 do
-      process exp.shift # args
+      process_until_empty exp
     end
 
     add_to_score name, SCORES[name]
