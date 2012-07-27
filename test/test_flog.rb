@@ -3,7 +3,7 @@ require 'flog'
 
 class TestFlog < MiniTest::Unit::TestCase
   def setup
-    @flog = Flog.new
+    @flog = Flog.new :parser => RubyParser
   end
 
   def test_add_to_score
