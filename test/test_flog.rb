@@ -266,12 +266,11 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_process_attrasgn
     sexp = s(:attrasgn,
-             s(:call, nil, :a, s(:arglist)),
+             s(:call, nil, :a),
              :[]=,
-             s(:arglist,
-               s(:splat,
-                 s(:call, nil, :b, s(:arglist))),
-               s(:call, nil, :c, s(:arglist))))
+             s(:splat,
+               s(:call, nil, :b)),
+             s(:call, nil, :c))
 
     util_process(sexp, 3.162,
                  :c => 1.0, :b => 1.0, :a => 1.0, :assignment => 1.0)
@@ -294,9 +293,8 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_process_block_pass
     sexp = s(:call, nil, :a,
-             s(:arglist,
-               s(:block_pass,
-                 s(:call, nil, :b, s(:arglist)))))
+             s(:block_pass,
+               s(:call, nil, :b)))
 
     util_process(sexp, 9.4,
                  :a              => 1.0,
@@ -307,9 +305,8 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_process_block_pass_colon2
     sexp = s(:call, nil, :a,
-             s(:arglist,
-               s(:block_pass,
-                 s(:colon2, s(:const, :A), :B))))
+             s(:block_pass,
+               s(:colon2, s(:const, :A), :B)))
 
     util_process(sexp, 2.2,
                  :a              => 1.0,
@@ -318,7 +315,7 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_process_block_pass_iter
     sexp = s(:block_pass,
-             s(:iter, s(:call, nil, :lambda, s(:arglist)), nil, s(:lit, 1)))
+             s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1)))
 
     util_process(sexp, 12.316,
                  :lit_fixnum    =>  0.275,
@@ -332,7 +329,7 @@ class TestFlog < MiniTest::Unit::TestCase
     sexp = s(:block_pass,
              s(:lasgn,
                :b,
-               s(:iter, s(:call, nil, :lambda, s(:arglist)), nil, s(:lit, 1))))
+               s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1))))
 
     util_process(sexp, 17.333,
                  :lit_fixnum    =>  0.275,
@@ -344,7 +341,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_process_call
-    sexp = s(:call, nil, :a, s(:arglist))
+    sexp = s(:call, nil, :a)
     util_process sexp, 1.0, :a => 1.0
   end
 
@@ -417,15 +414,15 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_process_if
     sexp = s(:if,
-             s(:call, nil, :b, s(:arglist)), # outside block, not penalized
-             s(:call, nil, :a, s(:arglist)), nil)
+             s(:call, nil, :b), # outside block, not penalized
+             s(:call, nil, :a), nil)
 
     util_process sexp, 2.326, :branch => 1.0, :b => 1.0, :a => 1.1
   end
 
   def test_process_iter
     sexp = s(:iter,
-             s(:call, nil, :loop, s(:arglist)), nil,
+             s(:call, nil, :loop), nil,
              s(:if, s(:true), s(:break), nil))
 
     util_process sexp, 2.326, :loop => 1.0, :branch => 2.1
@@ -437,9 +434,9 @@ class TestFlog < MiniTest::Unit::TestCase
     # end
 
     sexp = s(:iter,
-             s(:call, nil, :task, s(:arglist, s(:lit, :blah))),
+             s(:call, nil, :task, s(:lit, :blah)),
              nil,
-             s(:call, nil, :something, s(:arglist)))
+             s(:call, nil, :something))
 
     @klass, @meth = "task", "#blah"
 
@@ -452,9 +449,9 @@ class TestFlog < MiniTest::Unit::TestCase
     # end
 
     sexp = s(:iter,
-             s(:call, nil, :task, s(:arglist, s(:lit, /regexp/))),
+             s(:call, nil, :task, s(:lit, /regexp/)),
              nil,
-             s(:call, nil, :something, s(:arglist)))
+             s(:call, nil, :something))
 
     @klass, @meth = "task", "#/regexp/"
 
@@ -485,7 +482,7 @@ class TestFlog < MiniTest::Unit::TestCase
   def test_process_masgn
     sexp = s(:masgn,
              s(:array, s(:lasgn, :a), s(:lasgn, :b)),
-             s(:to_ary, s(:call, nil, :c, s(:arglist))))
+             s(:to_ary, s(:call, nil, :c)))
 
     util_process sexp, 3.162, :c => 1.0, :assignment => 3.0
   end
@@ -515,8 +512,8 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_process_while
     sexp = s(:while,
-             s(:call, nil, :a, s(:arglist)),
-             s(:call, nil, :b, s(:arglist)),
+             s(:call, nil, :a),
+             s(:call, nil, :b),
              true)
 
     util_process sexp, 2.417, :branch => 1.0, :a => 1.1, :b => 1.1
