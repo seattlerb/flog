@@ -645,11 +645,11 @@ class Flog < SexpProcessor
       recv = exp.first
 
       # DSL w/ names. eg task :name do ... end
-      if (recv[0] == :call and recv[1] == nil and recv.arglist[1] and
-          [:lit, :str].include? recv.arglist[1][0]) then
-        msg = recv[2]
-        submsg = recv.arglist[1][1]
-        in_klass msg do                           # :task
+      #   looks like s(:call, nil, :task, s(:lit, :name))
+      t, r, m, a = recv
+      if (t == :call and r == nil and a and [:lit, :str].include? a[0]) then
+        submsg = a[1]
+        in_klass m do                             # :task
           in_method submsg, exp.file, exp.line do # :name
             process_until_empty exp
           end
@@ -660,7 +660,7 @@ class Flog < SexpProcessor
 
     add_to_score :branch
 
-    exp.delete 0 # TODO: what is this?
+    exp.delete 0 # { || ... } has 0 in arg slot
 
     process exp.shift # no penalty for LHS
 
