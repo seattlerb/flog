@@ -1,3 +1,9 @@
+=== 3.0.0.b2 / 2012-08-07
+
+* 1 bug fix:
+
+  * Fix for sexp structure changes (no arglists).
+
 === 3.0.0.b1 / 2012-07-26
 
 * 4 minor enhancements:
