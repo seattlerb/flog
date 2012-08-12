@@ -4,10 +4,8 @@ require 'ruby_parser'
 require 'optparse'
 
 class File
-  RUBY19 = "<3".respond_to? :encoding
-
   class << self
-    alias :binread :read unless RUBY19
+    alias :binread :read unless "<3".respond_to?(:encoding)
   end
 end
 
