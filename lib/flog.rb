@@ -118,7 +118,7 @@ class Flog < SexpProcessor
 
   # REFACTOR: from flay
   def self.expand_dirs_to_files *dirs
-    extensions = ['rb']
+    extensions = %w[rb rake]
 
     dirs.flatten.map { |p|
       if File.directory? p then
@@ -255,6 +255,7 @@ class Flog < SexpProcessor
         ruby = file == '-' ? $stdin.read : File.binread(file)
         warn "** flogging #{file}" if option[:verbose]
 
+        @parser = option[:parser].new
         ast = @parser.process(ruby, file)
         next unless ast
         mass[file] = ast.mass
@@ -317,7 +318,7 @@ class Flog < SexpProcessor
     @method_stack        = []
     @method_locations    = {}
     @mass                = {}
-    @parser              = option[:parser].new
+    @parser              = nil
     self.auto_shift_type = true
     self.reset
   end
@@ -332,7 +333,7 @@ class Flog < SexpProcessor
     if Sexp === name then
       raise "you shouldn't see me"
     elsif @class_stack.any?
-      @class_stack.reverse.join("::")
+      @class_stack.reverse.join("::").sub(/\([^\)]+\)$/, '')
     else
       @@no_class
     end
@@ -637,6 +638,15 @@ class Flog < SexpProcessor
     s()
   end
 
+  def dsl_name? args
+    return false unless args and not args.empty?
+
+    first_arg = args.first
+    first_arg = first_arg[1] if first_arg[0] == :hash
+
+    [:lit, :str].include? first_arg[0] and first_arg[1]
+  end
+
   def process_iter(exp)
     context = (self.context - [:class, :module, :scope])
     context = context.uniq.sort_by { |s| s.to_s }
@@ -646,10 +656,14 @@ class Flog < SexpProcessor
 
       # DSL w/ names. eg task :name do ... end
       #   looks like s(:call, nil, :task, s(:lit, :name))
-      t, r, m, a = recv
-      if (t == :call and r == nil and a and [:lit, :str].include? a[0]) then
-        submsg = a[1]
-        in_klass m do                             # :task
+      #           or s(:call, nil, :task, s(:str, "name"))
+      #           or s(:call, nil, :task, s(:hash, s(:lit, :name) ...))
+
+      t, r, m, *a = recv
+
+      if t == :call and r == nil and submsg = dsl_name?(a) then
+        m = "#{m}(#{submsg})" if m and [String, Symbol].include?(submsg.class)
+        in_klass m do                             # :task/namespace
           in_method submsg, exp.file, exp.line do # :name
             process_until_empty exp
           end

@@ -458,6 +458,57 @@ class TestFlog < MiniTest::Unit::TestCase
     util_process sexp, 2.0, :something => 1.0, :task => 1.0
   end
 
+  def test_process_iter_dsl_hash
+    # task :woot => 42 do
+    #   something
+    # end
+
+    sexp = s(:iter,
+             s(:call, nil, :task, s(:hash, s(:lit, :woot), s(:lit, 42))),
+             nil,
+             s(:call, nil, :something))
+
+    @klass, @meth = "task", "#woot"
+
+    util_process sexp, 2.3, :something => 1.0, :task => 1.0, :lit_fixnum => 0.3
+  end
+
+  def test_process_iter_dsl_namespaced
+    # namespace :blah do
+    #   task :woot => 42 do
+    #     something
+    #   end
+    # end
+
+    sexp = s(:iter,
+             s(:call, nil, :namespace, s(:lit, :blah)),
+             nil,
+             s(:iter,
+               s(:call, nil, :task, s(:hash, s(:lit, :woot), s(:lit, 42))),
+               nil,
+               s(:call, nil, :something)))
+
+    @klass, @meth = "namespace(blah)::task", "woot"
+
+    score = 3.3
+    hash  = {
+      "namespace(blah)::task#woot" => {
+        :something  => 1.0,
+        :lit_fixnum => 0.3,
+        :task       => 1.0,
+      },
+      "namespace#blah" => {
+        :namespace => 1.0,
+      },
+    }
+
+    setup
+    @flog.process sexp
+
+    assert_equal hash, @flog.calls
+    assert_in_delta score, @flog.total
+  end
+
   def test_process_lit
     sexp = s(:lit, :y)
     util_process sexp, 0.0
