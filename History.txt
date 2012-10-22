@@ -1,3 +1,12 @@
+=== 3.0.0.b3 / 2012-10-22
+
+* 4 minor enhancements:
+
+  * Added .rake as a supported extension.
+  * Create a new parser for every file, preventing state barkification
+  * Extended DSL support to include hash args (eg task :blah => :dep).
+  * Extended DSL support to report nested names (eg namespace(blah)::task#woot)
+
 === 3.0.0.b2 / 2012-08-07
 
 * 1 bug fix:
