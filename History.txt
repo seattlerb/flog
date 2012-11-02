@@ -1,3 +1,13 @@
+=== 3.0.0 / 2012-11-02
+
+* 1 minor enhancement:
+
+  * Added a timeout handler to skip when RubyParser times out on a large file
+
+* 1 bug fix:
+
+  * Fixed handling of plain literals in masgn in args.
+
 === 3.0.0.b3 / 2012-10-22
 
 * 4 minor enhancements:
