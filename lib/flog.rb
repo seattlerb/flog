@@ -2,6 +2,7 @@ require 'rubygems'
 require 'sexp_processor'
 require 'ruby_parser'
 require 'optparse'
+require 'timeout'
 
 class File
   RUBY19 = "<3".respond_to? :encoding
@@ -256,7 +257,13 @@ class Flog < SexpProcessor
         warn "** flogging #{file}" if option[:verbose]
 
         @parser = option[:parser].new
-        ast = @parser.process(ruby, file)
+
+        begin
+          ast = @parser.process(ruby, file)
+        rescue Timeout::Error
+          warn "TIMEOUT parsing #{file}. Skipping."
+        end
+
         next unless ast
         mass[file] = ast.mass
         process ast
@@ -703,6 +710,9 @@ class Flog < SexpProcessor
 
   def process_masgn(exp)
     add_to_score :assignment
+
+    exp.map! { |s| Sexp === s ? s : s(:lasgn, s) }
+
     process_until_empty exp
     s()
   end
