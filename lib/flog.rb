@@ -487,6 +487,14 @@ class Flog < SexpProcessor
     @total_score
   end
 
+  def max_score
+    max_method[1]
+  end
+
+  def max_method
+    totals.max { |a, b| a[1] <=> b[1] }
+  end
+
   ##
   # Return the total score and populates @totals.
 

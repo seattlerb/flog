@@ -672,6 +672,24 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal 2.0, @flog.total
   end
 
+  def test_max_method
+    @flog.instance_variable_set :@calls, {
+      "main#none" => {"foo" => 2.0, "bar" => 4.0},
+      "main#meth_one" => {"foo" => 1.0, "bar" => 1.0},
+      "main#meth_two" => {"foo" => 2.0, "bar" => 14.0},
+    }
+    assert_equal ["main#meth_two", 16.0], @flog.max_method
+  end
+
+  def test_max_score
+    @flog.instance_variable_set :@calls, {
+      "main#none" => {"foo" => 2.0, "bar" => 4.0},
+      "main#meth_one" => {"foo" => 1.0, "bar" => 1.0},
+      "main#meth_two" => {"foo" => 2.0, "bar" => 14.0},
+    }
+    assert_equal 16.0, @flog.max_score
+  end
+
   def util_process sexp, score = -1, hash = {}
     setup
     @flog.process sexp
