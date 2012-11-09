@@ -17,6 +17,9 @@ Hoe.spec 'flog' do
 
   self.rubyforge_name = 'seattlerb'
 
+  self.flog_method = :max_method
+  self.flog_threshold = timebomb 150, 50, '2013-11-01', '2012-11-01'
+
   dependency 'sexp_processor', '~> 4.0'
   dependency 'ruby_parser',    '~> 3.0.0'
 end

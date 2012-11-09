@@ -132,7 +132,7 @@ class Flog < SexpProcessor
 
   def self.parse_options args = ARGV
     option = {
-      :quiet    => true,
+      :quiet    => false,
       :continue => false,
       :parser   => RubyParser,
     }
@@ -175,7 +175,7 @@ class Flog < SexpProcessor
         option[:methods] = true
       end
 
-      opts.on("-q", "--quiet", "Don't show method details. [default]") do
+      opts.on("-q", "--quiet", "Don't show parse errors.") do
         option[:quiet] = true
       end
 
@@ -256,7 +256,7 @@ class Flog < SexpProcessor
         ruby = file == '-' ? $stdin.read : File.binread(file)
         warn "** flogging #{file}" if option[:verbose]
 
-        @parser = option[:parser].new
+        @parser = (option[:parser] || RubyParser).new
 
         begin
           ast = @parser.process(ruby, file)
@@ -267,18 +267,21 @@ class Flog < SexpProcessor
         next unless ast
         mass[file] = ast.mass
         process ast
-      rescue RegexpError, SyntaxError, Racc::ParseError => e
+      rescue RubyParser::SyntaxError, Racc::ParseError => e
+        q = option[:quiet]
         if e.inspect =~ /<\%|%\>/ or ruby =~ /<\%|%\>/ then
+          return if q
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
         else
-          warn "ERROR: parsing ruby file #{file}"
+          warn "ERROR: parsing ruby file #{file}" unless q
           unless option[:continue] then
             warn "ERROR! Aborting. You may want to run with --continue."
             raise e
           end
-          warn "#{e.class}: #{e.message.strip} at:"
-          warn "  #{e.backtrace.first(5).join("\n  ")}"
+          return if q
+          warn "%s: %s at:\n  %s" % [e.class, e.message.strip,
+                                     e.backtrace.first(5).join("\n  ")]
         end
       end
     end
@@ -485,6 +488,14 @@ class Flog < SexpProcessor
     totals unless @total_score # calculates total_score as well
 
     @total_score
+  end
+
+  def max_score
+    max_method.last
+  end
+
+  def max_method
+    totals.max_by { |_, score| score }
   end
 
   ##
