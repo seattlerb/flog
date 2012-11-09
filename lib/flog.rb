@@ -5,7 +5,7 @@ require 'optparse'
 require 'timeout'
 
 class File
-  RUBY19 = "<3".respond_to? :encoding
+  RUBY19 = "<3".respond_to? :encoding unless defined? RUBY19
 
   class << self
     alias :binread :read unless RUBY19
