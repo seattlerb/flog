@@ -1,3 +1,5 @@
+require 'rake/tasklib'
+
 class FlogTask < Rake::TaskLib
   attr_accessor :name
   attr_accessor :dirs
