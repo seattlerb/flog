@@ -79,7 +79,7 @@ class Flog < SexpProcessor
   @@no_method = :none
 
   attr_accessor :multiplier
-  attr_reader :calls, :option, :class_stack, :method_stack, :mass
+  attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
   attr_reader :method_locations
 
   def self.plugins
@@ -324,6 +324,7 @@ class Flog < SexpProcessor
   def initialize option = {}
     super()
     @option              = option
+    @sclass              = nil
     @class_stack         = []
     @method_stack        = []
     @method_locations    = {}
@@ -621,7 +622,8 @@ class Flog < SexpProcessor
   alias :process_lasgn :process_dasgn_curr
 
   def process_defn(exp)
-    in_method exp.shift, exp.file, exp.line do
+    name = @sclass ? "::#{exp.shift}" : exp.shift
+    in_method name, exp.file, exp.line do
       process_until_empty exp
     end
     s()
@@ -736,10 +738,12 @@ class Flog < SexpProcessor
   end
 
   def process_sclass(exp)
+    @sclass = true
     penalize_by 0.5 do
       process exp.shift # recv
       process_until_empty exp
     end
+    @sclass = nil
 
     add_to_score :sclass
     s()
