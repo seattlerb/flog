@@ -255,18 +255,11 @@ class Flog < SexpProcessor
         # TODO: replace File.open to deal with "-"
         ruby = file == '-' ? $stdin.read : File.binread(file)
         warn "** flogging #{file}" if option[:verbose]
-
-        @parser = (option[:parser] || RubyParser).new
-
         begin
-          ast = @parser.process(ruby, file)
+          flog_ruby ruby, file
         rescue Timeout::Error
           warn "TIMEOUT parsing #{file}. Skipping."
         end
-
-        next unless ast
-        mass[file] = ast.mass
-        process ast
       rescue RubyParser::SyntaxError, Racc::ParseError => e
         q = option[:quiet]
         if e.inspect =~ /<\%|%\>/ or ruby =~ /<\%|%\>/ then
@@ -285,6 +278,17 @@ class Flog < SexpProcessor
         end
       end
     end
+  end
+  
+  ##
+  # Flog the given ruby source, optionally using file to provide paths for
+  # methods.
+  
+  def flog_ruby(ruby, file="-")
+    @parser = (option[:parser] || RubyParser).new
+    ast = @parser.process(ruby, file)
+    mass[file] = ast.mass
+    process ast
   end
 
   ##
