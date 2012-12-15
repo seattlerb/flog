@@ -114,6 +114,19 @@ class TestFlog < MiniTest::Unit::TestCase
   ensure
     $stdin = old_stdin
   end
+  
+  def test_flog_ruby
+    ruby = "2 + 3"
+    file = "sample.rb"
+
+    @flog.flog_ruby ruby, file
+
+    exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
+    assert_equal exp, @flog.calls
+
+    assert_equal 1.6, @flog.total unless @flog.option[:methods]
+    assert_equal 3, @flog.mass[file]
+  end
 
   def test_flog_erb
     old_stdin = $stdin
