@@ -251,40 +251,51 @@ class Flog < SexpProcessor
     files = Flog.expand_dirs_to_files(*files_or_dirs)
 
     files.each do |file|
-      begin
-        # TODO: replace File.open to deal with "-"
-        ruby = file == '-' ? $stdin.read : File.binread(file)
-        warn "** flogging #{file}" if option[:verbose]
+      ruby = file == '-' ? $stdin.read : File.binread(file)
 
-        @parser = (option[:parser] || RubyParser).new
-
-        begin
-          ast = @parser.process(ruby, file)
-        rescue Timeout::Error
-          warn "TIMEOUT parsing #{file}. Skipping."
-        end
-
-        next unless ast
-        mass[file] = ast.mass
-        process ast
-      rescue RubyParser::SyntaxError, Racc::ParseError => e
-        q = option[:quiet]
-        if e.inspect =~ /<\%|%\>/ or ruby =~ /<\%|%\>/ then
-          return if q
-          warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
-          warn "\n...stupid lemmings and their bad erb templates... skipping"
-        else
-          warn "ERROR: parsing ruby file #{file}" unless q
-          unless option[:continue] then
-            warn "ERROR! Aborting. You may want to run with --continue."
-            raise e
-          end
-          return if q
-          warn "%s: %s at:\n  %s" % [e.class, e.message.strip,
-                                     e.backtrace.first(5).join("\n  ")]
-        end
-      end
+      flog_ruby ruby, file
     end
+  end
+
+  ##
+  # Flog the given ruby source, optionally using file to provide paths
+  # for methods. Smart. Handles syntax errors and timeouts so you
+  # don't have to.
+
+  def flog_ruby ruby, file="-", timeout = 10
+    flog_ruby! ruby, file, timeout
+  rescue Timeout::Error
+    warn "TIMEOUT parsing #{file}. Skipping."
+  rescue RubyParser::SyntaxError, Racc::ParseError => e
+    q = option[:quiet]
+    if e.inspect =~ /<\%|%\>/ or ruby =~ /<\%|%\>/ then
+      return if q
+      warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
+      warn "\n...stupid lemmings and their bad erb templates... skipping"
+    else
+      warn "ERROR: parsing ruby file #{file}" unless q
+      unless option[:continue] then
+        warn "ERROR! Aborting. You may want to run with --continue."
+        raise e
+      end
+      return if q
+      warn "%s: %s at:\n  %s" % [e.class, e.message.strip,
+                                 e.backtrace.first(5).join("\n  ")]
+    end
+  end
+
+  ##
+  # Flog the given ruby source, optionally using file to provide paths for
+  # methods. Does not handle timeouts or syntax errors. See #flog_ruby.
+
+  def flog_ruby! ruby, file="-", timeout = 10
+    @parser = (option[:parser] || RubyParser).new
+
+    warn "** flogging #{file}" if option[:verbose]
+
+    ast = @parser.process ruby, file, timeout
+    mass[file] = ast.mass
+    process ast
   end
 
   ##
