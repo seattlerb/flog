@@ -24,4 +24,15 @@ Hoe.spec 'flog' do
   dependency 'ruby_parser',    '~> 3.0.0'
 end
 
+task :debug do
+  require "flog"
+
+  file = ENV["F"] || "-"
+  ruby = file == "-" ? ENV["R"] : File.read(file)
+
+  @flog = Flog.new :parser => RubyParser
+  @flog.flog_ruby ruby, file
+  @flog.report
+end
+
 # vim: syntax=ruby
