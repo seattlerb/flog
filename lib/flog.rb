@@ -682,6 +682,8 @@ class Flog < SexpProcessor
     context = (self.context - [:class, :module, :scope])
     context = context.uniq.sort_by { |s| s.to_s }
 
+    exp.delete 0 # { || ... } has 0 in arg slot
+
     if context == [:block, :iter] or context == [:iter] then
       recv = exp.first
 
@@ -704,8 +706,6 @@ class Flog < SexpProcessor
     end
 
     add_to_score :branch
-
-    exp.delete 0 # { || ... } has 0 in arg slot
 
     process exp.shift # no penalty for LHS
 
