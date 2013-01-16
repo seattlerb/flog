@@ -294,6 +294,10 @@ class Flog < SexpProcessor
     warn "** flogging #{file}" if option[:verbose]
 
     ast = @parser.process ruby, file, timeout
+    unless ast then
+      warn "ERROR: processing ruby file #{file}"
+      return
+    end
     mass[file] = ast.mass
     process ast
   end
