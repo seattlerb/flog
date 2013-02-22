@@ -251,6 +251,8 @@ class Flog < SexpProcessor
     files = Flog.expand_dirs_to_files(*files_or_dirs)
 
     files.each do |file|
+      next unless file == '-' or File.readable? file
+
       ruby = file == '-' ? $stdin.read : File.binread(file)
 
       flog_ruby ruby, file
