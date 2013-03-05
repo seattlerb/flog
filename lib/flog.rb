@@ -576,13 +576,17 @@ class Flog < SexpProcessor
     add_to_score :block_pass
 
     case arg.first
-    when :lvar, :dvar, :ivar, :cvar, :self, :const, :colon2, :nil then
+    when :lvar, :dvar, :ivar, :cvar, :self, :const, :colon2, :nil then # f(&b)
       # do nothing
-    when :lit, :call then
+    when :lit, :call then                                              # f(&:b)
       add_to_score :to_proc_normal
-    when :lasgn then # blah(&l = proc { ... })
+    when :lasgn then                                                   # f(&l=b)
       add_to_score :to_proc_lasgn
-    when :iter, :dsym, :dstr, *BRANCHING then
+    when :iter, :dsym, :dstr, *BRANCHING then                          # below
+      # f(&proc { ... })
+      # f(&"#{...}")
+      # f(&:"#{...}")
+      # f(&if ... then ... end") and all other branching forms
       add_to_score :to_proc_icky!
     else
       raise({:block_pass_even_ickier! => arg}.inspect)
