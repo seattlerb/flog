@@ -13,7 +13,7 @@ class File
 end
 
 class Flog < SexpProcessor
-  VERSION = "3.2.2"
+  VERSION = "3.2.3"
 
   THRESHOLD = 0.60
   SCORES = Hash.new 1

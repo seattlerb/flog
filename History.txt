@@ -1,3 +1,9 @@
+=== 3.2.3 / 2013-03-21
+
+* 1 bug fix:
+
+  * Don't blow up if a path doesn't exist or isn't readable.
+
 === 3.2.2 / 2013-01-22
 
 * 1 bug fix:
