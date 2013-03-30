@@ -10,6 +10,7 @@ require 'flog'
 require 'gauntlet'
 require 'pp'
 
+# :stopdoc:
 class FlogGauntlet < Gauntlet
   $owners       = {}
   $score_file   = 'flog-scores.yml'
@@ -191,3 +192,4 @@ filter  = Regexp.new filter if filter
 flogger = FlogGauntlet.new
 flogger.run_the_gauntlet filter
 flogger.display_report max
+# :startdoc:

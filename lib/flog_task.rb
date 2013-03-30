@@ -1,11 +1,34 @@
 require 'rake/tasklib'
 
 class FlogTask < Rake::TaskLib
+  ##
+  # The name of the task. Defaults to :flog
+
   attr_accessor :name
+
+  ##
+  # What directories to operate on. Sensible defaults.
+
   attr_accessor :dirs
+
+  ##
+  # Threshold to fail the task at. Default 200.
+
   attr_accessor :threshold
+
+  ##
+  # Verbosity of output. Defaults to rake's trace (-t) option.
+
   attr_accessor :verbose
+
+  ##
+  # Method to use to score. Defaults to :total
+
   attr_accessor :method
+
+  ##
+  # Creates a new FlogTask instance with given +name+, +threshold+,
+  # +dirs+, and +method+.
 
   def initialize name = :flog, threshold = 200, dirs = nil, method = nil
     @name      = name
@@ -20,6 +43,9 @@ class FlogTask < Rake::TaskLib
 
     define
   end
+
+  ##
+  # Defines the flog task.
 
   def define
     desc "Analyze for code complexity in: #{dirs.join(', ')}"

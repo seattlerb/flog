@@ -5,7 +5,7 @@ require 'optparse'
 require 'timeout'
 
 class File
-  RUBY19 = "<3".respond_to? :encoding unless defined? RUBY19
+  RUBY19 = "<3".respond_to? :encoding unless defined? RUBY19 # :nodoc:
 
   class << self
     alias :binread :read unless RUBY19
@@ -13,10 +13,21 @@ class File
 end
 
 class Flog < SexpProcessor
-  VERSION = "3.2.3"
+  VERSION = "3.2.3" # :nodoc:
+
+  ##
+  # Cut off point where the report should stop unless --all given.
 
   THRESHOLD = 0.60
+
+  ##
+  # The scoring system hash. Maps node type to score.
+
   SCORES = Hash.new 1
+
+  ##
+  # Names of nodes that branch.
+
   BRANCHING = [ :and, :case, :else, :if, :or, :rescue, :until, :when, :while ]
 
   ##
@@ -78,16 +89,24 @@ class Flog < SexpProcessor
   @@no_class  = :main
   @@no_method = :none
 
+  # :stopdoc:
   attr_accessor :multiplier
   attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
   attr_reader :method_locations
+  # :startdoc:
+
+  ##
+  # The known plugins for Flog. See Flog.load_plugins.
 
   def self.plugins
     @plugins ||= {}
   end
 
-  # TODO: I think I want to do this more like hoe's plugin system. Generalize?
+  ##
+  # Loads all flog plugins. Files must be named "flog/*.rb".
+
   def self.load_plugins
+    # TODO: I think I want to do this more like hoe's plugin system. Generalize?
     loaded, found = {}, {}
 
     Gem.find_files("flog/*.rb").reverse.each do |path|
@@ -117,7 +136,11 @@ class Flog < SexpProcessor
     end
   end
 
+  ##
+  # Expands +*dirs+ to all files within that match ruby and rake extensions.
+  # --
   # REFACTOR: from flay
+
   def self.expand_dirs_to_files *dirs
     extensions = %w[rb rake]
 
@@ -129,6 +152,9 @@ class Flog < SexpProcessor
       end
     }.flatten.sort
   end
+
+  ##
+  # Parse options in +args+ (defaults to ARGV).
 
   def self.parse_options args = ARGV
     option = {
@@ -337,6 +363,9 @@ class Flog < SexpProcessor
     @method_stack.shift
   end
 
+  ##
+  # Creates a new Flog instance with +options+.
+
   def initialize option = {}
     super()
     @option              = option
@@ -497,9 +526,15 @@ class Flog < SexpProcessor
     Math.sqrt(a*a + b*b + c*c)
   end
 
+  ##
+  # Returns the method signature for the current method.
+
   def signature
     "#{klass_name}#{method_name}"
   end
+
+  ##
+  # Calculates and returns the score (and total score on the side).
 
   def total # FIX: I hate this indirectness
     totals unless @total_score # calculates total_score as well
@@ -507,9 +542,15 @@ class Flog < SexpProcessor
     @total_score
   end
 
+  ##
+  # Returns the maximum score for a single method. Used for FlogTask.
+
   def max_score
     max_method.last
   end
+
+  ##
+  # Returns the method/score pair of the maximum score.
 
   def max_method
     totals.max_by { |_, score| score }
@@ -538,6 +579,7 @@ class Flog < SexpProcessor
   ############################################################
   # Process Methods:
 
+  # :stopdoc:
   def process_alias(exp)
     process exp.shift
     process exp.shift
@@ -791,4 +833,5 @@ class Flog < SexpProcessor
     process_until_empty exp
     s()
   end
+  # :startdoc:
 end
