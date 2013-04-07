@@ -93,6 +93,7 @@ class Flog < SexpProcessor
   attr_accessor :multiplier
   attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
   attr_reader :method_locations
+  attr_reader :methods, :scores
   # :startdoc:
 
   ##
@@ -423,23 +424,25 @@ class Flog < SexpProcessor
         io.puts
       end
     end
-    # io.puts
+  end
+
+  ##
+  # Calculates classes and methods scores.
+  def calculate
+    each_by_score threshold do |class_method, score, call_list|
+      klass = class_method.split(/#|::/).first
+
+      methods[klass] << [class_method, score]
+      scores[klass]  += score
+    end
   end
 
   ##
   # Output the report, grouped by class/module, up to a given max or
   # report everything, if nil.
 
-  def output_details_grouped io, max = nil
-    scores  = Hash.new 0
-    methods = Hash.new { |h,k| h[k] = [] }
-
-    each_by_score max do |class_method, score, call_list|
-      klass = class_method.split(/#|::/).first
-
-      methods[klass] << [class_method, score]
-      scores[klass]  += score
-    end
+  def output_details_grouped io, threshold = nil    
+    calculate
 
     scores.sort_by { |_, n| -n }.each do |klass, total|
       io.puts
@@ -514,6 +517,8 @@ class Flog < SexpProcessor
     @totals     = @total_score = nil
     @multiplier = 1.0
     @calls      = Hash.new { |h,k| h[k] = Hash.new 0 }
+    @methods    = Hash.new { |h,k| h[k] = [] }
+    @scores     = Hash.new 0
   end
 
   ##
