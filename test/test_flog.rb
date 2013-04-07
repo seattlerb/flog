@@ -738,4 +738,9 @@ class TestFlog < MiniTest::Unit::TestCase
 
     assert_in_delta score, @flog.total
   end
+
+  def test_threshold
+    test_flog
+    assert_equal Flog::THRESHOLD * 1.6, @flog.threshold
+  end
 end

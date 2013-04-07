@@ -484,6 +484,12 @@ class Flog < SexpProcessor
   end
 
   ##
+  # Final threshold that is used for report
+  def threshold
+    option[:all] ? nil : total * THRESHOLD
+  end
+
+  ##
   # Report results to #io, STDOUT by default.
 
   def report(io = $stdout)
@@ -492,15 +498,14 @@ class Flog < SexpProcessor
 
     return if option[:score]
 
-    max = option[:all] ? nil : total * THRESHOLD
     if option[:group] then
-      output_details_grouped io, max
+      output_details_grouped io, threshold
     else
-      output_details io, max
+      output_details io, threshold
     end
   ensure
     self.reset
-  end
+  end  
 
   ##
   # Reset score data
