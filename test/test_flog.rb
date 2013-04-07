@@ -427,6 +427,22 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_in_delta 5.375, @flog.total
   end
 
+  def test_process_defn_in_self_after_self
+    sexp = s(:sclass, s(:self),
+             s(:sclass, s(:self), s(:self)),
+             s(:defn, :x,
+               s(:args, :y),
+                 s(:lit, 42)))
+
+    setup
+    @flog.process sexp
+
+    exp = {'main::x' => {:lit_fixnum => 0.375}, 'main#none' => {:sclass => 12.5}}
+    assert_equal exp, @flog.calls
+
+    assert_in_delta 12.875, @flog.total
+  end
+
   def test_process_defs
     @meth = "::x" # HACK, I don't like this
 
