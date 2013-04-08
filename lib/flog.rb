@@ -508,7 +508,7 @@ class Flog < SexpProcessor
     end
   ensure
     self.reset
-  end  
+  end
 
   ##
   # Reset score data

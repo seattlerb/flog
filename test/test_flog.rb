@@ -12,7 +12,7 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_add_to_score
     assert_empty @flog.calls
-    setup_my_klass @flog
+    setup_my_klass
 
     expected = {"MyKlass::Base#mymethod" => {"blah" => 42.0}}
     assert_equal expected, @flog.calls
@@ -742,19 +742,23 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal Flog::THRESHOLD * 1.6, @flog.threshold
   end
 
+  def test_no_threshold
+    @flog.option[:all] = true
+    assert_equal nil, @flog.threshold
+  end
+
   def test_calculate
-    setup_my_klass @flog
+    setup_my_klass
 
     @flog.calculate
 
     assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)
     assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.methods)
   end
-
-  private
-  def setup_my_klass flog
-    flog.class_stack  << "Base" << "MyKlass"
-    flog.method_stack << "mymethod"
-    flog.add_to_score "blah", 42
+ 
+  def setup_my_klass
+    @flog.class_stack  << "Base" << "MyKlass"
+    @flog.method_stack << "mymethod"
+    @flog.add_to_score "blah", 42
   end
 end
