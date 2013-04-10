@@ -755,7 +755,7 @@ class TestFlog < MiniTest::Unit::TestCase
     @flog.calculate
 
     assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)
-    assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.methods)
+    assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
   end
  
   def setup_my_klass
