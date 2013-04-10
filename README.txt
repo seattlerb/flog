@@ -1,58 +1,39 @@
-# flog
+= flog
 
-[home](http://ruby.sadi.st/) | [repo](https://github.com/seattlerb/flog) | [rdoc](http://seattlerb.rubyforge.org/flog)
+home :: http://ruby.sadi.st/
+repo :: https://github.com/seattlerb/flog
+rdoc :: http://seattlerb.rubyforge.org/flog
 
-## DESCRIPTION:
+== DESCRIPTION:
 
 Flog reports the most tortured code in an easy to read pain
 report. The higher the score, the more pain the code is in.
 
-## FEATURES/PROBLEMS:
+== FEATURES/PROBLEMS:
 
 * Easy to read reporting of complexity/pain.
 
-## SYNOPSIS:
+== SYNOPSIS:
 
-* Command line
+    % ./bin/flog -g lib
+    Total Flog = 1097.2 (17.4 flog / method)
+    
+       323.8: Flog total
+        85.3: Flog#output_details
+        61.9: Flog#process_iter
+        53.7: Flog#parse_options
+    ...
 
-~~~
-% ./bin/flog -g lib
-Total Flog = 1097.2 (17.4 flog / method)
-
-   323.8: Flog total
-    85.3: Flog#output_details
-    61.9: Flog#process_iter
-    53.7: Flog#parse_options
-...
-~~~
-
-* Ruby code
-
-~~~ruby
-scanner = Flog.new
-scanner.flog 'path_to_your_ruby_file_or_folder'
-scanner.calculate
-
-scanner.scores
-# {"User" => 19.624353739718167}
-
-scanner.methods
-# { "User" => [
-#   ["User#encrypt_password", 10.989540481749003], 
-#   ["User#remember_me", 8.634813257969164]
-# ]}
-~~~
-
-## REQUIREMENTS:
+== REQUIREMENTS:
 
 * ruby2ruby (only for -v)
 * ruby_parser
 
-## INSTALL:
+== INSTALL:
 
 * sudo gem install flog
 
-## LICENSE:
+== LICENSE:
 
 (The MIT License)
 
