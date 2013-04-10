@@ -1,7 +1,7 @@
 .autotest
 History.txt
 Manifest.txt
-README.md
+README.txt
 Rakefile
 bin/flog
 lib/flog.rb
