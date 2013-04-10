@@ -1,15 +1,14 @@
 #!/usr/local/bin/ruby -w
 
-require 'optparse'
-require 'flog'
+require "flog_cli"
 
-Flog.load_plugins
+FlogCLI.load_plugins
 
-options = Flog.parse_options ARGV
+options = FlogCLI.parse_options ARGV
 
 ARGV << "-" if ARGV.empty?
 
-flogger = Flog.new options
+flogger = FlogCLI.new options
 flogger.flog ARGV
 flogger.report
 

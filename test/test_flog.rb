@@ -1,11 +1,23 @@
-require 'minitest/autorun'
-require 'flog'
+require "minitest/autorun"
+require "flog"
 
 class Flog
   attr_writer :calls
 end
 
-class TestFlog < MiniTest::Unit::TestCase
+class FlogTest < MiniTest::Unit::TestCase
+  def setup_flog
+    old_stdin = $stdin
+    $stdin = StringIO.new "2 + 3"
+    $stdin.rewind
+
+    @flog.flog "-"
+  ensure
+    $stdin = old_stdin
+  end
+end
+
+class TestFlog < FlogTest
   def setup
     @flog = Flog.new :parser => RubyParser
   end
@@ -29,88 +41,14 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal 1.0, @flog.average
   end
 
-  def test_cls_expand_dirs_to_files
-    expected = %w(lib/flog.rb lib/flog_task.rb lib/gauntlet_flog.rb)
-    assert_equal expected, Flog.expand_dirs_to_files('lib')
-    expected = %w(Rakefile)
-    assert_equal expected, Flog.expand_dirs_to_files('Rakefile')
-  end
-
-  def test_cls_parse_options
-    # defaults
-    opts = Flog.parse_options
-    assert_equal false,  opts[:quiet]
-    assert_equal false, opts[:continue]
-
-    {
-      "-a"             => :all,
-      "--all"          => :all,
-      "-b"             => :blame,
-      "--blame"        => :blame,
-      "-c"             => :continue,
-      "--continue"     => :continue,
-      "-d"             => :details,
-      "--details"      => :details,
-      "-g"             => :group,
-      "--group"        => :group,
-      "-m"             => :methods,
-      "--methods-only" => :methods,
-      "-q"             => :quiet,
-      "--quiet"        => :quiet,
-      "-s"             => :score,
-      "--score"        => :score,
-      "-v"             => :verbose,
-      "--verbose"      => :verbose,
-    }.each do |key, val|
-      assert_equal true, Flog.parse_options(key)[val]
-    end
-  end
-
-  def test_cls_parse_options_path
-    old_path = $:.dup
-    Flog.parse_options("-Ia,b,c")
-    assert_equal old_path + %w(a b c), $:
-
-    Flog.parse_options(["-I", "d,e,f"])
-    assert_equal old_path + %w(a b c d e f), $:
-
-    Flog.parse_options(["-I", "g", "-Ih"])
-    assert_equal old_path + %w(a b c d e f g h), $:
-  ensure
-    $:.replace old_path
-  end
-
-  def test_cls_parse_options_help
-    def Flog.exit
-      raise "happy"
-    end
-
-    ex = nil
-    o, e = capture_io do
-      ex = assert_raises RuntimeError do
-        Flog.parse_options "-h"
-      end
-    end
-
-    assert_equal "happy", ex.message
-    assert_match(/methods-only/, o)
-    assert_equal "", e
-  end
-
   def test_flog
-    old_stdin = $stdin
-    $stdin = StringIO.new "2 + 3"
-    $stdin.rewind
-
-    @flog.flog "-"
+    setup_flog
 
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
     assert_equal 1.6, @flog.total unless @flog.option[:methods]
     assert_equal 3, @flog.mass["-"]
-  ensure
-    $stdin = old_stdin
   end
 
   def test_flog_ruby
@@ -193,66 +131,6 @@ class TestFlog < MiniTest::Unit::TestCase
 
     @flog.method_stack << "::whatevs"
     assert_equal "::whatevs", @flog.method_name
-  end
-
-  def test_output_details
-    @flog.option[:all] = true
-    test_flog
-
-    @flog.totals["main#something"] = 42.0
-
-    o = StringIO.new
-    @flog.output_details o
-
-    expected = "\n     1.6: main#none\n"
-
-    assert_equal expected, o.string
-    assert_equal 1.6, @flog.totals["main#none"]
-  end
-
-  def test_output_details_grouped
-    test_flog
-
-    o = StringIO.new
-    @flog.output_details_grouped o
-
-    expected = "\n     1.6: main total\n     1.6: main#none\n"
-
-    assert_equal expected, o.string
-  end
-
-  def test_output_details_methods
-    @flog.option[:methods] = true
-
-    test_flog
-
-    @flog.totals["main#something"] = 42.0 # TODO: no sense... why no output?
-
-    o = StringIO.new
-    @flog.output_details o
-
-    # HACK assert_equal "", o.string
-    assert_equal 0, @flog.totals["main#none"]
-  end
-
-  def test_output_details_detailed
-    @flog.option[:details] = true
-
-    test_flog
-
-    @flog.totals["main#something"] = 42.0
-
-    o = StringIO.new
-    @flog.output_details o, nil
-
-    expected = "\n     1.6: main#none
-     1.0:   +
-     0.6:   lit_fixnum
-
-"
-
-    assert_equal expected, o.string
-    assert_equal 1.6, @flog.totals["main#none"]
   end
 
   # def test_process_until_empty
@@ -625,71 +503,6 @@ class TestFlog < MiniTest::Unit::TestCase
 
     sexp = s(:yield, s(:lit, 42), s(:lit, 24))
     util_process sexp, 1.50, :yield => 1.0, :lit_fixnum => 0.50
-  end
-
-  def test_report
-    test_flog
-
-    o = StringIO.new
-    @flog.report o
-
-    expected = "     1.6: flog total
-     1.6: flog/method average
-
-     1.6: main#none
-"
-
-    assert_equal expected, o.string
-  end
-
-  def test_report_all
-    old_stdin = $stdin
-    $stdin = StringIO.new "2 + 3"
-    $stdin.rewind
-
-    @flog.flog "-"
-    @flog.totals["main#something"] = 42.0
-
-    exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
-    assert_equal exp, @flog.calls
-
-    @flog.option[:all] = true
-
-    assert_equal 1.6, @flog.total unless @flog.option[:methods]
-    assert_equal 3, @flog.mass["-"]
-
-    o = StringIO.new
-    @flog.report o
-
-    expected = "     1.6: flog total
-     1.6: flog/method average
-
-     1.6: main#none
-"
-
-    assert_equal expected, o.string
-    # FIX: add thresholded output
-  ensure
-    $stdin = old_stdin
-  end
-
-  def test_report_group
-    # TODO: add second group to ensure proper output
-    @flog.option[:group] = true
-
-    test_flog
-
-    o = StringIO.new
-    @flog.report o
-
-    expected = "     1.6: flog total
-     1.6: flog/method average
-
-     1.6: main total
-     1.6: main#none
-"
-
-    assert_equal expected, o.string
   end
 
   def test_score_method
