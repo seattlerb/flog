@@ -99,10 +99,8 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_flog
     old_stdin = $stdin
-    $stdin = StringIO.new "2 + 3"
-    $stdin.rewind
 
-    @flog.flog "-"
+    setup_string_io
 
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
@@ -197,7 +195,7 @@ class TestFlog < MiniTest::Unit::TestCase
 
   def test_output_details
     @flog.option[:all] = true
-    test_flog
+    setup_string_io
 
     @flog.totals["main#something"] = 42.0
 
@@ -211,7 +209,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_output_details_grouped
-    test_flog
+    setup_string_io
 
     o = StringIO.new
     @flog.output_details_grouped o
@@ -221,24 +219,28 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal expected, o.string
   end
 
-  def test_output_details_methods
+  def test_output_details_methods_true
     @flog.option[:methods] = true
 
-    test_flog
+    input_something_method    
+    
+    assert_equal 1.1, @flog.totals["main#something"]
+    assert_equal false, @flog.totals.has_key?("main#none")
+  end
 
-    @flog.totals["main#something"] = 42.0 # TODO: no sense... why no output?
+  def test_output_details_methods_false
+    @flog.option[:methods] = false
 
-    o = StringIO.new
-    @flog.output_details o
-
-    # HACK assert_equal "", o.string
-    assert_equal 0, @flog.totals["main#none"]
+    input_something_method
+    
+    assert_equal 1.1, @flog.totals["main#something"]
+    assert_equal 1.75, @flog.totals["main#none"]
   end
 
   def test_output_details_detailed
     @flog.option[:details] = true
 
-    test_flog
+    setup_string_io
 
     @flog.totals["main#something"] = 42.0
 
@@ -612,7 +614,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_report
-    test_flog
+    setup_string_io
 
     o = StringIO.new
     @flog.report o
@@ -661,7 +663,7 @@ class TestFlog < MiniTest::Unit::TestCase
     # TODO: add second group to ensure proper output
     @flog.option[:group] = true
 
-    test_flog
+    setup_string_io
 
     o = StringIO.new
     @flog.report o
@@ -738,7 +740,7 @@ class TestFlog < MiniTest::Unit::TestCase
   end
 
   def test_threshold
-    test_flog
+    setup_string_io
     assert_equal Flog::THRESHOLD * 1.6, @flog.threshold
   end
 
@@ -753,12 +755,29 @@ class TestFlog < MiniTest::Unit::TestCase
     @flog.calculate
 
     assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)
-    assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.methods)
+    assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
   end
  
   def setup_my_klass
     @flog.class_stack  << "Base" << "MyKlass"
     @flog.method_stack << "mymethod"
     @flog.add_to_score "blah", 42
+  end
+
+  def setup_string_io input = "2 + 3"
+    $stdin = StringIO.new input
+    $stdin.rewind
+
+    @flog.flog "-"
+  end
+
+  def input_something_method
+    setup_string_io %(
+      def something
+        puts "blah"
+      end
+
+      2 + 3
+    )
   end
 end

@@ -92,8 +92,7 @@ class Flog < SexpProcessor
   # :stopdoc:
   attr_accessor :multiplier
   attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
-  attr_reader :method_locations
-  attr_reader :methods, :scores
+  attr_reader :method_locations, :method_scores, :scores
   # :startdoc:
 
   ##
@@ -225,7 +224,7 @@ class Flog < SexpProcessor
       next if self.plugins.empty?
       opts.separator "Plugin options:"
 
-      extra = self.methods.grep(/parse_options/) - %w(parse_options)
+      extra = self.method_scores.grep(/parse_options/) - %w(parse_options)
 
       extra.sort.each do |msg|
         self.send msg, opts, option
@@ -257,11 +256,10 @@ class Flog < SexpProcessor
   # Iterate over the calls sorted (descending) by score.
 
   def each_by_score max = nil
-    my_totals = totals
     current   = 0
 
-    calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
-      score = my_totals[class_method]
+    calls.sort_by { |k,v| -totals[k] }.each do |class_method, call_list|
+      score = totals[class_method]
 
       yield class_method, score, call_list
 
@@ -432,7 +430,7 @@ class Flog < SexpProcessor
     each_by_score threshold do |class_method, score, call_list|
       klass = class_method.split(/#|::/).first
 
-      methods[klass] << [class_method, score]
+      method_scores[klass] << [class_method, score]
       scores[klass]  += score
     end
   end
@@ -441,7 +439,7 @@ class Flog < SexpProcessor
   # Output the report, grouped by class/module, up to a given max or
   # report everything, if nil.
 
-  def output_details_grouped io, threshold = nil    
+  def output_details_grouped io, threshold = nil
     calculate
 
     scores.sort_by { |_, n| -n }.each do |klass, total|
@@ -449,7 +447,7 @@ class Flog < SexpProcessor
 
       io.puts "%8.1f: %s" % [total, "#{klass} total"]
 
-      methods[klass].each do |name, score|
+      method_scores[klass].each do |name, score|
         self.print_score io, name, score
       end
     end
@@ -499,11 +497,11 @@ class Flog < SexpProcessor
     io.puts "%8.1f: %s" % [total, "flog total"]
     io.puts "%8.1f: %s" % [average, "flog/method average"]
 
-    return if option[:score]
+    return if option[:score]    
 
     if option[:group] then
       output_details_grouped io, threshold
-    else
+    else      
       output_details io, threshold
     end
   ensure
@@ -514,11 +512,11 @@ class Flog < SexpProcessor
   # Reset score data
 
   def reset
-    @totals     = @total_score = nil
-    @multiplier = 1.0
-    @calls      = Hash.new { |h,k| h[k] = Hash.new 0 }
-    @methods    = Hash.new { |h,k| h[k] = [] }
-    @scores     = Hash.new 0
+    @totals           = @total_score = nil
+    @multiplier       = 1.0
+    @calls            = Hash.new { |h,k| h[k] = Hash.new 0 }
+    @method_scores    = Hash.new { |h,k| h[k] = [] }
+    @scores           = Hash.new 0
   end
 
   ##
