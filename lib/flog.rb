@@ -371,7 +371,7 @@ class Flog < SexpProcessor
   def initialize option = {}
     super()
     @option              = option
-    @sclass              = nil
+    @sclass              = []
     @class_stack         = []
     @method_stack        = []
     @method_locations    = {}
@@ -697,7 +697,7 @@ class Flog < SexpProcessor
   alias :process_lasgn :process_dasgn_curr
 
   def process_defn(exp)
-    name = @sclass ? "::#{exp.shift}" : exp.shift
+    name = @sclass.empty? ? exp.shift : "::#{exp.shift}"
     in_method name, exp.file, exp.line do
       process_until_empty exp
     end
@@ -813,12 +813,12 @@ class Flog < SexpProcessor
   end
 
   def process_sclass(exp)
-    @sclass = true
+    @sclass.push(true)
     penalize_by 0.5 do
       process exp.shift # recv
       process_until_empty exp
     end
-    @sclass = nil
+    @sclass.pop
 
     add_to_score :sclass
     s()
