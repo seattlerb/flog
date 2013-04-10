@@ -112,7 +112,7 @@ class TestFlog < MiniTest::Unit::TestCase
   ensure
     $stdin = old_stdin
   end
-  
+
   def test_flog_ruby
     ruby = "2 + 3"
     file = "sample.rb"
@@ -755,7 +755,7 @@ class TestFlog < MiniTest::Unit::TestCase
     assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)
     assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.methods)
   end
- 
+
   def setup_my_klass
     @flog.class_stack  << "Base" << "MyKlass"
     @flog.method_stack << "mymethod"

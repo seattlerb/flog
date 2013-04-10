@@ -94,6 +94,7 @@ class Flog < SexpProcessor
   attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
   attr_reader :method_locations
   attr_reader :methods, :scores
+
   # :startdoc:
 
   ##
@@ -428,6 +429,7 @@ class Flog < SexpProcessor
 
   ##
   # Calculates classes and methods scores.
+
   def calculate
     each_by_score threshold do |class_method, score, call_list|
       klass = class_method.split(/#|::/).first
@@ -441,7 +443,7 @@ class Flog < SexpProcessor
   # Output the report, grouped by class/module, up to a given max or
   # report everything, if nil.
 
-  def output_details_grouped io, threshold = nil    
+  def output_details_grouped io, threshold = nil
     calculate
 
     scores.sort_by { |_, n| -n }.each do |klass, total|
@@ -488,6 +490,7 @@ class Flog < SexpProcessor
 
   ##
   # Final threshold that is used for report
+
   def threshold
     option[:all] ? nil : total * THRESHOLD
   end
