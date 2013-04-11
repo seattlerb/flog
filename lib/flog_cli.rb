@@ -8,7 +8,7 @@ class FlogCLI
   extend Forwardable
 
   def_delegators :@flog, :average, :calculate, :each_by_score, :option
-  def_delegators :@flog, :method_locations, :methods, :reset, :scores
+  def_delegators :@flog, :method_locations, :method_scores, :reset, :scores
   def_delegators :@flog, :threshold, :total, :no_method
 
   ##
@@ -133,7 +133,7 @@ class FlogCLI
       next if self.plugins.empty?
       opts.separator "Plugin options:"
 
-      extra = self.methods.grep(/parse_options/) - %w(parse_options)
+      extra = self.method_scores.grep(/parse_options/) - %w(parse_options)
 
       extra.sort.each do |msg|
         self.send msg, opts, option
@@ -199,7 +199,7 @@ class FlogCLI
 
       io.puts "%8.1f: %s" % [total, "#{klass} total"]
 
-      methods[klass].each do |name, score|
+      method_scores[klass].each do |name, score|
         self.print_score io, name, score
       end
     end
