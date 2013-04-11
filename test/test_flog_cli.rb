@@ -2,7 +2,6 @@ require "test/test_flog"
 require "flog_cli"
 
 class FlogCLI
-  def_delegators :@flog, :option
   def_delegators :@flog, :totals # FIX: test_report_all is overreaching?
   def_delegators :@flog, :calls  # FIX: refactor?
   def_delegators :@flog, :mass   # FIX: refactor?
