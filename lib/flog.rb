@@ -90,8 +90,7 @@ class Flog < SexpProcessor
   # :stopdoc:
   attr_accessor :multiplier
   attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
-  attr_reader :method_locations
-  attr_reader :methods, :scores
+  attr_reader :method_locations, :method_scores, :scores
 
   # :startdoc:
 
@@ -119,8 +118,8 @@ class Flog < SexpProcessor
     each_by_score threshold do |class_method, score, call_list|
       klass = class_method.split(/#|::/).first
 
-      methods[klass] << [class_method, score]
-      scores[klass]  += score
+      method_scores[klass] << [class_method, score]
+      scores[klass] += score
     end
   end
 
@@ -329,11 +328,11 @@ class Flog < SexpProcessor
   # Reset score data
 
   def reset
-    @totals     = @total_score = nil
-    @multiplier = 1.0
-    @calls      = Hash.new { |h,k| h[k] = Hash.new 0 }
-    @methods    = Hash.new { |h,k| h[k] = [] }
-    @scores     = Hash.new 0
+    @totals           = @total_score = nil
+    @multiplier       = 1.0
+    @calls            = Hash.new { |h,k| h[k] = Hash.new 0 }
+    @method_scores    = Hash.new { |h,k| h[k] = [] }
+    @scores           = Hash.new 0
   end
 
   ##
