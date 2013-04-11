@@ -7,7 +7,7 @@ require "flog"
 class FlogCLI
   extend Forwardable
 
-  def_delegators :@flog, :average, :calculate, :each_by_score
+  def_delegators :@flog, :average, :calculate, :each_by_score, :option
   def_delegators :@flog, :method_locations, :methods, :reset, :scores
   def_delegators :@flog, :threshold, :total, :no_method
 
