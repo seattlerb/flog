@@ -18,7 +18,7 @@ class FlogGauntlet < Gauntlet
   $syntax_error = {:total => -2, :average => -2, :methods => {}}
   $no_gem       = {:total => -4, :average => -4, :methods => {}}
 
-  # copied straight from hoedown.rb 
+  # copied straight from hoedown.rb
   my_projects = %w[InlineFortran ParseTree RubyInline RubyToC
                    ZenHacks ZenTest bfts box_layout
                    change_class flay flog gauntlet heckle
@@ -56,7 +56,7 @@ class FlogGauntlet < Gauntlet
       puts "avg methods / gem : %8.2f (%8.2f stddev)" % [method_counts.average, method_counts.stddev]
       puts "avg flog / gem    : %8.2f (%8.2f stddev)" % [flog_numbers.average, flog_numbers.stddev]
     end
-    
+
     worst = scores.sort_by { |k,v| -v[:total] }.first(max)
     report_worst "Worst Projects EVAR", worst do |project, score|
       owner = $owners[project].join(', ') rescue nil
@@ -120,7 +120,7 @@ class FlogGauntlet < Gauntlet
     topN = Hash[*methods.sort_by { |k,v| -v }.first(n).flatten]
     {
       :max     => methods.values.max,
-      :total   => flogger.total,
+      :total   => flogger.total_score,
       :size    => methods.size,
       :average => flogger.average,
       :stddev  => flogger.stddev,
