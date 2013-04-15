@@ -25,14 +25,25 @@ Hoe.spec 'flog' do
 end
 
 task :debug do
-  require "flog"
+  require "flog_cli"
 
-  file = ENV["F"] || "-"
-  ruby = file == "-" ? ENV["R"] : File.read(file)
+  class FlogCLI
+    def_delegators :@flog, :flog_ruby
+  end
 
-  @flog = Flog.new :parser => RubyParser
-  @flog.flog_ruby ruby, file
-  @flog.report
+  file = ENV["F"]
+  ruby = ENV["R"]
+
+  flog = FlogCLI.new :parser => RubyParser
+
+  if file then
+    flog.flog file
+  else
+    flog.flog_ruby ruby, "-"
+    flog.calculate_total_scores
+  end
+
+  flog.report
 end
 
 # vim: syntax=ruby
