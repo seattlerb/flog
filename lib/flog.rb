@@ -143,7 +143,7 @@ class Flog < SexpProcessor
   # Iterate over the calls sorted (descending) by score.
 
   def each_by_score max = nil
-    current   = 0
+    current = 0
 
     calls.sort_by { |k,v| -totals[k] }.each do |class_method, call_list|
       score = totals[class_method]
