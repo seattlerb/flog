@@ -11,10 +11,7 @@ class FlogTest < MiniTest::Unit::TestCase
     $stdin = StringIO.new "2 + 3"
     $stdin.rewind
 
-    @flog.flog "-"
-    # REFACTOR
-    # @flog here is not Flog, but FlogCLI in some tests
-    @flog.calculate_total_scores
+    @flog.flog "-"              # @flog can be Flog or FlogCLI
   ensure
     $stdin = old_stdin
   end
