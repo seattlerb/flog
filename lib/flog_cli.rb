@@ -9,7 +9,7 @@ class FlogCLI
 
   def_delegators :@flog, :average, :calculate, :each_by_score, :option
   def_delegators :@flog, :method_locations, :method_scores, :reset, :scores
-  def_delegators :@flog, :threshold, :total, :no_method
+  def_delegators :@flog, :threshold, :total_score, :no_method, :calculate_total_scores
 
   ##
   # Expands +*dirs+ to all files within that match ruby and rake extensions.
@@ -221,7 +221,7 @@ class FlogCLI
   # Report results to #io, STDOUT by default.
 
   def report(io = $stdout)
-    io.puts "%8.1f: %s" % [total, "flog total"]
+    io.puts "%8.1f: %s" % [total_score, "flog total"]
     io.puts "%8.1f: %s" % [average, "flog/method average"]
 
     return if option[:score]

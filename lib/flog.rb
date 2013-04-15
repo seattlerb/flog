@@ -91,6 +91,7 @@ class Flog < SexpProcessor
   attr_accessor :multiplier
   attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
   attr_reader :method_locations, :method_scores, :scores
+  attr_reader :total_score, :totals
 
   # :startdoc:
 
@@ -108,7 +109,7 @@ class Flog < SexpProcessor
 
   def average
     return 0 if calls.size == 0
-    total / calls.size
+    total_score / calls.size
   end
 
   ##
@@ -142,11 +143,10 @@ class Flog < SexpProcessor
   # Iterate over the calls sorted (descending) by score.
 
   def each_by_score max = nil
-    my_totals = totals
     current   = 0
 
-    calls.sort_by { |k,v| -my_totals[k] }.each do |class_method, call_list|
-      score = my_totals[class_method]
+    calls.sort_by { |k,v| -totals[k] }.each do |class_method, call_list|
+      score = totals[class_method]
 
       yield class_method, score, call_list
 
@@ -169,6 +169,8 @@ class Flog < SexpProcessor
 
       flog_ruby ruby, file
     end
+
+    calculate_total_scores
   end
 
   ##
@@ -361,36 +363,25 @@ class Flog < SexpProcessor
   # Final threshold that is used for report
 
   def threshold
-    option[:all] ? nil : total * THRESHOLD
+    option[:all] ? nil : total_score * THRESHOLD
   end
 
   ##
-  # Calculates and returns the score (and total score on the side).
+  # Calculates the total score and populates @totals.
 
-  def total # FIX: I hate this indirectness
-    totals unless @total_score # calculates total_score as well
+  def calculate_total_scores
+    return if @totals
 
-    @total_score
-  end
+    @total_score = 0
+    @totals = Hash.new(0)
 
-  ##
-  # Return the total score and populates @totals.
+    calls.each do |meth, tally|
+      next if option[:methods] and meth =~ /##{@@no_method}$/
+      score = score_method(tally)
 
-  def totals
-    unless @totals then
-      @total_score = 0
-      @totals = Hash.new(0)
-
-      calls.each do |meth, tally|
-        next if option[:methods] and meth =~ /##{@@no_method}$/
-        score = score_method(tally)
-
-        @totals[meth] = score
-        @total_score += score
-      end
+      @totals[meth] = score
+      @total_score += score
     end
-
-    @totals
   end
 
   def no_method # :nodoc:

@@ -12,6 +12,9 @@ class FlogTest < MiniTest::Unit::TestCase
     $stdin.rewind
 
     @flog.flog "-"
+    # REFACTOR
+    # @flog here is not Flog, but FlogCLI in some tests
+    @flog.calculate_total_scores
   ensure
     $stdin = old_stdin
   end
@@ -47,7 +50,7 @@ class TestFlog < FlogTest
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
-    assert_equal 1.6, @flog.total unless @flog.option[:methods]
+    assert_equal 1.6, @flog.total_score unless @flog.option[:methods]
     assert_equal 3, @flog.mass["-"]
   end
 
@@ -56,11 +59,12 @@ class TestFlog < FlogTest
     file = "sample.rb"
 
     @flog.flog_ruby ruby, file
+    @flog.calculate_total_scores
 
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
-    assert_equal 1.6, @flog.total unless @flog.option[:methods]
+    assert_equal 1.6, @flog.total_score unless @flog.option[:methods]
     assert_equal 3, @flog.mass[file]
   end
 
@@ -296,11 +300,12 @@ class TestFlog < FlogTest
 
     setup
     @flog.process sexp
+    @flog.calculate_total_scores
 
     exp = {'main::x' => {:lit_fixnum => 0.375}, 'main#none' => {:sclass => 5.0}}
     assert_equal exp, @flog.calls
 
-    assert_in_delta 5.375, @flog.total
+    assert_in_delta 5.375, @flog.total_score
   end
 
   def test_process_defn_in_self_after_self
@@ -312,11 +317,12 @@ class TestFlog < FlogTest
 
     setup
     @flog.process sexp
+    @flog.calculate_total_scores
 
     exp = {'main::x' => {:lit_fixnum => 0.375}, 'main#none' => {:sclass => 12.5}}
     assert_equal exp, @flog.calls
 
-    assert_in_delta 12.875, @flog.total
+    assert_in_delta 12.875, @flog.total_score
   end
 
   def test_process_defs
@@ -428,9 +434,10 @@ class TestFlog < FlogTest
 
     setup
     @flog.process sexp
+    @flog.calculate_total_scores
 
     assert_equal hash, @flog.calls
-    assert_in_delta score, @flog.total
+    assert_in_delta score, @flog.total_score
   end
 
   def test_process_lit
@@ -526,9 +533,11 @@ class TestFlog < FlogTest
     assert_equal "main#y", @flog.signature
   end
 
-  def test_total
+  def test_total_score
     @flog.add_to_score "blah", 2
-    assert_equal 2.0, @flog.total
+    @flog.calculate_total_scores
+
+    assert_equal 2.0, @flog.total_score
   end
 
   def test_max_method
@@ -538,6 +547,7 @@ class TestFlog < FlogTest
       "main#meth_two" => {"foo" => 2.0, "bar" => 14.0},
     }
 
+    @flog.calculate_total_scores
     assert_equal ["main#meth_two", 16.0], @flog.max_method
   end
 
@@ -547,6 +557,7 @@ class TestFlog < FlogTest
       "main#meth_one" => {"foo" => 1.0, "bar" => 1.0},
       "main#meth_two" => {"foo" => 2.0, "bar" => 14.0},
     }
+    @flog.calculate_total_scores
 
     assert_equal 16.0, @flog.max_score
   end
@@ -563,7 +574,9 @@ class TestFlog < FlogTest
       assert_equal exp, @flog.calls
     end
 
-    assert_in_delta score, @flog.total
+    @flog.calculate_total_scores
+
+    assert_in_delta score, @flog.total_score
   end
 
   def test_threshold
@@ -579,6 +592,7 @@ class TestFlog < FlogTest
   def test_calculate
     setup_my_klass
 
+    @flog.calculate_total_scores
     @flog.calculate
 
     assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)

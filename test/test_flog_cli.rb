@@ -84,8 +84,6 @@ class TestFlogCLI < FlogTest
     @flog.option[:all] = true
     setup_flog
 
-    @flog.totals["main#something"] = 42.0
-
     o = StringIO.new
     @flog.output_details o
 
@@ -99,6 +97,7 @@ class TestFlogCLI < FlogTest
     setup_flog
 
     o = StringIO.new
+    @flog.calculate_total_scores
     @flog.output_details_grouped o
 
     expected = "\n     1.6: main total\n     1.6: main#none\n"
@@ -111,8 +110,6 @@ class TestFlogCLI < FlogTest
 
     setup_flog
 
-    @flog.totals["main#something"] = 42.0 # TODO: no sense... why no output?
-
     o = StringIO.new
     @flog.output_details o
 
@@ -124,8 +121,6 @@ class TestFlogCLI < FlogTest
     @flog.option[:details] = true
 
     setup_flog
-
-    @flog.totals["main#something"] = 42.0
 
     o = StringIO.new
     @flog.output_details o, nil
@@ -161,14 +156,14 @@ class TestFlogCLI < FlogTest
     $stdin.rewind
 
     @flog.flog "-"
-    @flog.totals["main#something"] = 42.0
 
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
     @flog.option[:all] = true
+    @flog.calculate_total_scores
 
-    assert_equal 1.6, @flog.total unless @flog.option[:methods]
+    assert_equal 1.6, @flog.total_score unless @flog.option[:methods]
     assert_equal 3, @flog.mass["-"]
 
     o = StringIO.new
@@ -205,4 +200,3 @@ class TestFlogCLI < FlogTest
     assert_equal expected, o.string
   end
 end
-
