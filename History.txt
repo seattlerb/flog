@@ -1,3 +1,16 @@
+=== 4.0.0 / 2013-04-18
+
+* 1 major enhancement:
+
+  * Renamed Flog#methods to #method_scores. (makaroni4)
+
+* 4 minor enhancements:
+
+  * Added accessors for methods, scores. Now available for CIs! (makaroni4)
+  * Refactored calculations down to 2 methods: total_score and totals. (makaroni4)
+  * Refactored to #calculate, #threshold. (makaroni4)
+  * Track stack of nested sclass scopes for parser (pithyless)
+
 === 3.2.3 / 2013-03-21
 
 * 1 bug fix:
