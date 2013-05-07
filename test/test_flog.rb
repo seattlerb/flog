@@ -596,6 +596,50 @@ class TestFlog < FlogTest
     assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
   end
 
+  def test_reset
+    user_class = %(
+        class User
+          def blah n
+            puts "blah" * n
+          end
+        end
+      )
+    user_file = "user.rb"
+
+    @flog.flog_ruby user_class, user_file
+    @flog.calculate_total_scores
+    @flog.calculate
+
+    assert_equal({ 'User#blah' => 'user.rb:3' }, @flog.method_locations)
+    assert_equal({ "User#blah" => 2.2 }, @flog.totals)
+    assert_equal(2.2, @flog.total_score)
+    assert_equal(1.0, @flog.multiplier)
+    assert_equal({ "User#blah" => { :* => 1.2, :puts => 1.0 } }, @flog.calls)
+    assert_equal({ "User" => 2.2 }, @flog.scores)
+
+    @flog.reset
+
+    coder_class = %(
+        class Coder
+          def happy?
+            [true, false].sample
+          end
+        end
+      )
+    coder_file = "coder.rb"
+
+    @flog.flog_ruby coder_class, coder_file
+    @flog.calculate_total_scores
+    @flog.calculate
+
+    assert_equal({ 'Coder#happy?' => 'coder.rb:3' }, @flog.method_locations)
+    assert_equal({ "Coder#happy?" => 1.0 }, @flog.totals)
+    assert_equal(1.0, @flog.total_score)
+    assert_equal(1.0, @flog.multiplier)
+    assert_equal({ "Coder#happy?" => { :sample => 1.0 } }, @flog.calls)
+    assert_equal({ "Coder" => 1.0 }, @flog.scores)
+  end
+
   def setup_my_klass
     @flog.class_stack  << "Base" << "MyKlass"
     @flog.method_stack << "mymethod"
