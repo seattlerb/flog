@@ -330,11 +330,12 @@ class Flog < SexpProcessor
   # Reset score data
 
   def reset
-    @totals        = @total_score = nil
-    @multiplier    = 1.0
-    @calls         = Hash.new { |h,k| h[k] = Hash.new 0 }
-    @method_scores = Hash.new { |h,k| h[k] = [] }
-    @scores        = Hash.new 0
+    @totals           = @total_score = nil
+    @multiplier       = 1.0
+    @calls            = Hash.new { |h,k| h[k] = Hash.new 0 }
+    @method_scores    = Hash.new { |h,k| h[k] = [] }
+    @scores           = Hash.new 0
+    @method_locations = {}
   end
 
   ##
