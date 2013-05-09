@@ -1,7 +1,7 @@
 = flog
 
 home :: http://ruby.sadi.st/
-repo :: https://github.com/seattlerb/flog
+code :: https://github.com/seattlerb/flog
 rdoc :: http://seattlerb.rubyforge.org/flog
 
 == DESCRIPTION:
