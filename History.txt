@@ -1,3 +1,15 @@
+=== 4.1.0 / 2013-05-10
+
+* 3 minor enhancements:
+
+  * Cleaned up tests by adding assert_hash_in_epsilon. yay!
+  * Fixed method_location is now cleared on #reset. (makaroni4)
+  * to_proc_normal is now penalized based on RUBY_VERSION. Scores were benchmarked.
+
+* 1 bug fix:
+
+  * Fixed code/home urls in readme/gem.
+
 === 4.0.0 / 2013-04-18
 
 * 1 major enhancement:
