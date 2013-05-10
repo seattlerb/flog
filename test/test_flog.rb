@@ -190,11 +190,19 @@ class TestFlog < FlogTest
              s(:block_pass,
                s(:call, nil, :b)))
 
-    util_process(sexp, 9.4,
+    bonus = case RUBY_VERSION
+            when /^1\.8\.7/ then 0.4
+            when /^1\.9/    then 0.3
+            when /^2\.[01]/ then 0.2
+            end
+
+    bonus += Flog::OTHER_SCORES[:to_proc_normal]
+
+    util_process(sexp, 3.4 + bonus,
                  :a              => 1.0,
                  :block_pass     => 1.2,
                  :b              => 1.2,
-                 :to_proc_normal => 6.0)
+                 :to_proc_normal => 0.0 + bonus)
   end
 
   def test_process_block_pass_colon2
@@ -559,6 +567,14 @@ class TestFlog < FlogTest
     assert_equal 16.0, @flog.max_score
   end
 
+  def assert_hash_in_epsilon exp, act
+    assert_equal exp.keys.sort_by(&:to_s), act.keys.sort_by(&:to_s)
+
+    exp.keys.each do |k|
+      assert_in_epsilon exp[k], act[k], 0.001, k
+    end
+  end
+
   def util_process sexp, score = -1, hash = {}
     setup
     @flog.process sexp
@@ -567,13 +583,16 @@ class TestFlog < FlogTest
     @meth  ||= "#none"
 
     unless score != -1 && hash.empty? then
-      exp = {"#{@klass}#{@meth}" => hash}
-      assert_equal exp, @flog.calls
+      key = "#{@klass}#{@meth}"
+      act = @flog.calls
+
+      assert_equal [key], act.keys.sort
+      assert_hash_in_epsilon hash, act[key]
     end
 
     @flog.calculate_total_scores
 
-    assert_in_delta score, @flog.total_score
+    assert_in_epsilon score, @flog.total_score
   end
 
   def test_threshold

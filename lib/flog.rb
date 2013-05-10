@@ -42,7 +42,16 @@ class Flog < SexpProcessor
     :super          => 1,
     :to_proc_icky!  => 10,
     :to_proc_lasgn  => 15,
-    :to_proc_normal => 5,
+    :to_proc_normal => case RUBY_VERSION
+                       when /^1\.8\.7/ then
+                         2
+                       when /^1\.9/ then
+                         1.5
+                       when /^2\.[01]/ then
+                         1
+                       else
+                         5
+                       end,
     :yield          => 1,
   }
 
