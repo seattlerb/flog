@@ -5,7 +5,7 @@ class Flog
   attr_writer :calls
 end
 
-class FlogTest < MiniTest::Unit::TestCase
+class FlogTest < Minitest::Test
   def setup_flog
     old_stdin = $stdin
     $stdin = StringIO.new "2 + 3"
