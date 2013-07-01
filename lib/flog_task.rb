@@ -50,8 +50,8 @@ class FlogTask < Rake::TaskLib
   def define
     desc "Analyze for code complexity in: #{dirs.join(', ')}"
     task name do
-      require "flog"
-      flog = Flog.new :continue => true, :quiet => true
+      require "flog_cli"
+      flog = FlogCLI.new :continue => true, :quiet => true
       flog.flog(*dirs)
 
       desc, score = flog.send method
