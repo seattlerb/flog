@@ -10,6 +10,7 @@ class FlogCLI
   def_delegators :@flog, :average, :calculate, :each_by_score, :option
   def_delegators :@flog, :method_locations, :method_scores, :reset, :scores
   def_delegators :@flog, :threshold, :total_score, :no_method, :calculate_total_scores
+  def_delegators :@flog, :max_method
 
   ##
   # Expands +*dirs+ to all files within that match ruby and rake extensions.
