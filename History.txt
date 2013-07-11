@@ -1,3 +1,13 @@
+=== 4.1.1 / 2013-07-11
+
+* 1 minor enhancement:
+
+  * Added max_method to delegators.
+
+* 1 bug fix:
+
+  * Fixed FlogTask to use FlogCLI. (envygeeks)
+
 === 4.1.0 / 2013-05-10
 
 * 3 minor enhancements:

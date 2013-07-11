@@ -11,7 +11,7 @@ class File
 end
 
 class Flog < SexpProcessor
-  VERSION = "4.1.0" # :nodoc:
+  VERSION = "4.1.1" # :nodoc:
 
   ##
   # Cut off point where the report should stop unless --all given.
