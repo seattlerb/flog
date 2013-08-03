@@ -22,7 +22,7 @@ class FlogTask < Rake::TaskLib
   attr_accessor :verbose
 
   ##
-  # Method to use to score. Defaults to :total
+  # Method to use to score. Defaults to :total_score
 
   attr_accessor :method
 
@@ -34,7 +34,7 @@ class FlogTask < Rake::TaskLib
     @name      = name
     @dirs      = dirs || %w(app bin lib spec test)
     @threshold = threshold
-    @method    = method || :total
+    @method    = method || :total_score
     @verbose   = Rake.application.options.trace
 
     yield self if block_given?
