@@ -110,6 +110,7 @@ class Flog < SexpProcessor
   # Spankings!
 
   def add_to_score name, score = OTHER_SCORES[name]
+    return if option[:methods] and method_stack.empty?
     @calls[signature][name] += score * @multiplier
   end
 
@@ -386,7 +387,6 @@ class Flog < SexpProcessor
     @totals = Hash.new(0)
 
     calls.each do |meth, tally|
-      next if option[:methods] and meth =~ /##{@@no_method}$/
       score = score_method(tally)
 
       @totals[meth] = score

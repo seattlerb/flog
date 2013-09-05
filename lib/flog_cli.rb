@@ -175,8 +175,6 @@ class FlogCLI
     io.puts
 
     each_by_score max do |class_method, score, call_list|
-      return 0 if option[:methods] and class_method =~ /##{no_method}/
-
       self.print_score io, class_method, score
 
       if option[:details] then
