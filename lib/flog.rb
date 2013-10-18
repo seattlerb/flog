@@ -10,7 +10,7 @@ class File
   end
 end
 
-class Flog < SexpProcessor
+class Flog < MethodBasedSexpProcessor
   VERSION = "4.1.2" # :nodoc:
 
   ##
@@ -93,13 +93,10 @@ class Flog < SexpProcessor
 
   SCORES.merge!(:inject => 2)
 
-  @@no_class  = :main
-  @@no_method = :none
-
   # :stopdoc:
   attr_accessor :multiplier
-  attr_reader :calls, :option, :class_stack, :method_stack, :mass, :sclass
-  attr_reader :method_locations, :method_scores, :scores
+  attr_reader :calls, :option, :mass
+  attr_reader :method_scores, :scores
   attr_reader :total_score, :totals
 
   # :startdoc:
@@ -228,69 +225,16 @@ class Flog < SexpProcessor
   end
 
   ##
-  # Adds name to the class stack, for the duration of the block
-
-  def in_klass name
-    if Sexp === name then
-      name = case name.first
-             when :colon2 then
-               name = name.flatten
-               name.delete :const
-               name.delete :colon2
-               name.join("::")
-             when :colon3 then
-               name.last.to_s
-             else
-               raise "unknown type #{name.inspect}"
-             end
-    end
-
-    @class_stack.unshift name
-    yield
-    @class_stack.shift
-  end
-
-  ##
-  # Adds name to the method stack, for the duration of the block
-
-  def in_method(name, file, line)
-    method_name = Regexp === name ? name.inspect : name.to_s
-    @method_stack.unshift method_name
-    @method_locations[signature] = "#{file}:#{line}"
-    yield
-    @method_stack.shift
-  end
-
-  ##
   # Creates a new Flog instance with +options+.
 
   def initialize option = {}
     super()
     @option              = option
-    @sclass              = []
-    @class_stack         = []
-    @method_stack        = []
     @method_locations    = {}
     @mass                = {}
     @parser              = nil
     self.auto_shift_type = true
     self.reset
-  end
-
-  ##
-  # Returns the first class in the list, or @@no_class if there are
-  # none.
-
-  def klass_name
-    name = @class_stack.first
-
-    if Sexp === name then
-      raise "you shouldn't see me"
-    elsif @class_stack.any?
-      @class_stack.reverse.join("::").sub(/\([^\)]+\)$/, '')
-    else
-      @@no_class
-    end
   end
 
   ##
@@ -308,16 +252,6 @@ class Flog < SexpProcessor
   end
 
   ##
-  # Returns the first method in the list, or "#none" if there are
-  # none.
-
-  def method_name
-    m = @method_stack.first || @@no_method
-    m = "##{m}" unless m =~ /::/
-    m
-  end
-
-  ##
   # For the duration of the block the complexity factor is increased
   # by #bonus This allows the complexity of sub-expressions to be
   # influenced by the expressions in which they are found.  Yields 42
@@ -330,13 +264,6 @@ class Flog < SexpProcessor
   end
 
   ##
-  # Process each element of #exp in turn.
-
-  def process_until_empty exp
-    process exp.shift until exp.empty?
-  end
-
-  ##
   # Reset score data
 
   def reset
@@ -345,7 +272,7 @@ class Flog < SexpProcessor
     @calls            = Hash.new { |h,k| h[k] = Hash.new 0 }
     @method_scores    = Hash.new { |h,k| h[k] = [] }
     @scores           = Hash.new 0
-    @method_locations = {}
+    method_locations.clear
   end
 
   ##
@@ -361,13 +288,6 @@ class Flog < SexpProcessor
       end
     end
     Math.sqrt(a*a + b*b + c*c)
-  end
-
-  ##
-  # Returns the method signature for the current method.
-
-  def signature
-    "#{klass_name}#{method_name}"
   end
 
   ##
@@ -487,13 +407,12 @@ class Flog < SexpProcessor
   end
 
   def process_class(exp)
-    in_klass exp.shift do
+    super do
       penalize_by 1.0 do
         process exp.shift # superclass expression
       end
       process_until_empty exp
     end
-    s()
   end
 
   def process_dasgn_curr(exp) # FIX: remove
@@ -504,22 +423,6 @@ class Flog < SexpProcessor
   end
   alias :process_iasgn :process_dasgn_curr
   alias :process_lasgn :process_dasgn_curr
-
-  def process_defn(exp)
-    name = @sclass.empty? ? exp.shift : "::#{exp.shift}"
-    in_method name, exp.file, exp.line do
-      process_until_empty exp
-    end
-    s()
-  end
-
-  def process_defs(exp)
-    process exp.shift # recv
-    in_method "::#{exp.shift}", exp.file, exp.line do
-      process_until_empty exp
-    end
-    s()
-  end
 
   # TODO:  it's not clear to me whether this can be generated at all.
   def process_else(exp)
@@ -605,20 +508,13 @@ class Flog < SexpProcessor
     s()
   end
 
-  def process_module(exp)
-    in_klass exp.shift do
-      process_until_empty exp
-    end
-    s()
-  end
-
   def process_sclass(exp)
-    @sclass.push(true)
-    penalize_by 0.5 do
-      process exp.shift # recv
-      process_until_empty exp
+    super do
+      penalize_by 0.5 do
+        process exp.shift # recv
+        process_until_empty exp
+      end
     end
-    @sclass.pop
 
     add_to_score :sclass
     s()

@@ -80,64 +80,6 @@ class TestFlog < FlogTest
     $stdin = old_stdin
   end
 
-  def test_in_klass
-    assert_empty @flog.class_stack
-
-    @flog.in_klass "xxx::yyy" do
-      assert_equal ["xxx::yyy"], @flog.class_stack
-    end
-
-    assert_empty @flog.class_stack
-  end
-
-  def test_in_method
-    assert_empty @flog.method_stack
-
-    @flog.in_method "xxx", "file.rb", 42 do
-      assert_equal ["xxx"], @flog.method_stack
-    end
-
-    assert_empty @flog.method_stack
-
-    expected = {"main#xxx" => "file.rb:42"}
-    assert_equal expected, @flog.method_locations
-  end
-
-  def test_klass_name
-    assert_equal :main, @flog.klass_name
-
-    @flog.class_stack << "whatevs" << "flog"
-    assert_equal "flog::whatevs", @flog.klass_name
-  end
-
-  def test_klass_name_sexp
-    @flog.in_klass s(:colon2, s(:const, :X), :Y) do
-      assert_equal "X::Y", @flog.klass_name
-    end
-
-    @flog.in_klass s(:colon3, :Y) do
-      assert_equal "Y", @flog.klass_name
-    end
-  end
-
-  def test_method_name
-    assert_equal "#none", @flog.method_name
-
-    @flog.method_stack << "whatevs"
-    assert_equal "#whatevs", @flog.method_name
-  end
-
-  def test_method_name_cls
-    assert_equal "#none", @flog.method_name
-
-    @flog.method_stack << "::whatevs"
-    assert_equal "::whatevs", @flog.method_name
-  end
-
-  # def test_process_until_empty
-  #   flunk "no"
-  # end
-
   def test_penalize_by
     assert_equal 1, @flog.multiplier
     @flog.penalize_by 2 do
@@ -523,19 +465,6 @@ class TestFlog < FlogTest
     assert_equal 2.0, @flog.score_method(:branch     => 2.0)
     assert_equal 5.0, @flog.score_method(:blah       => 3.0, # distance formula
                                          :branch     => 4.0)
-  end
-
-  def test_signature
-    assert_equal "main#none", @flog.signature
-
-    @flog.class_stack << "X"
-    assert_equal "X#none", @flog.signature
-
-    @flog.method_stack << "y"
-    assert_equal "X#y", @flog.signature
-
-    @flog.class_stack.shift
-    assert_equal "main#y", @flog.signature
   end
 
   def test_total_score
