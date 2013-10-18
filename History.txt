@@ -1,3 +1,11 @@
+=== 4.2.0 / 2013-10-18
+
+* 3 minor enhancements:
+
+  * Added --extended / -e to put file:line output on next line (for rubymine & friends)
+  * Extracted MethodBasedSexpProcessor and pushed up to sexp_processor gem.
+  * Updated dependency on sexp_processor to ~> 4.4.
+
 === 4.1.2 / 2013-09-05
 
 * 2 bug fixes:
