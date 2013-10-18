@@ -40,6 +40,8 @@ class TestFlogCLI < FlogTest
       "--methods-only" => :methods,
       "-q"             => :quiet,
       "--quiet"        => :quiet,
+      "-e"             => :extended,
+      "--extended"     => :extended,
       "-s"             => :score,
       "--score"        => :score,
       "-v"             => :verbose,

@@ -115,6 +115,10 @@ class FlogCLI
         option[:quiet] = true
       end
 
+      opts.on("-e", "--extended", "Put file:line on a separate line (for rubymine & friends).") do
+        option[:extended] = true
+      end
+
       opts.on("-s", "--score", "Display total score only.") do
         option[:score] = true
       end
@@ -210,7 +214,9 @@ class FlogCLI
   def print_score io, name, score
     location = method_locations[name]
     if location then
-      io.puts "%8.1f: %-32s %s" % [score, name, location]
+      sep = " "
+      sep = "%-11s" % "\n" if option[:extended]
+      io.puts "%8.1f: %-32s%s%s" % [score, name, sep, location]
     else
       io.puts "%8.1f: %s" % [score, name]
     end
