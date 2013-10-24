@@ -214,6 +214,21 @@ class TestFlog < FlogTest
     util_process sexp, 0.25, :lit_fixnum => 0.25
   end
 
+  def test_process_class_with_none
+    coder_class = %(
+        class Coder
+          test :true
+        end
+      )
+    coder_file = "coder.rb"
+
+    @flog.flog_ruby coder_class, coder_file
+    @flog.calculate_total_scores
+    @flog.calculate
+
+    assert_equal({ 'Coder#none' => 'coder.rb:2' }, @flog.method_locations)
+  end
+
   # TODO:
   # 392:  alias :process_or :process_and
   # 475:  alias :process_iasgn :process_dasgn_curr
@@ -426,6 +441,21 @@ class TestFlog < FlogTest
     util_process sexp, 0.25, :lit_fixnum => 0.25
   end
 
+  def test_process_module_with_none
+    coder_class = %(
+        module Coder
+          test :true
+        end
+      )
+    coder_file = "coder.rb"
+
+    @flog.flog_ruby coder_class, coder_file
+    @flog.calculate_total_scores
+    @flog.calculate
+
+    assert_equal({ 'Coder#none' => 'coder.rb:2' }, @flog.method_locations)
+  end
+
   def test_process_sclass
     sexp = s(:sclass, s(:self), s(:scope, s(:lit, 42)))
     util_process sexp, 5.375, :sclass => 5.0, :lit_fixnum => 0.375
@@ -558,7 +588,7 @@ class TestFlog < FlogTest
     @flog.calculate_total_scores
     @flog.calculate
 
-    assert_equal({ 'User#blah' => 'user.rb:3' }, @flog.method_locations)
+    assert_equal({ 'User#none' => 'user.rb:2', 'User#blah' => 'user.rb:3' }, @flog.method_locations)
     assert_equal({ "User#blah" => 2.2 }, @flog.totals)
     assert_equal(2.2, @flog.total_score)
     assert_equal(1.0, @flog.multiplier)
@@ -580,7 +610,7 @@ class TestFlog < FlogTest
     @flog.calculate_total_scores
     @flog.calculate
 
-    assert_equal({ 'Coder#happy?' => 'coder.rb:3' }, @flog.method_locations)
+    assert_equal({ 'Coder#none' => 'coder.rb:2', 'Coder#happy?' => 'coder.rb:3' }, @flog.method_locations)
     assert_equal({ "Coder#happy?" => 1.0 }, @flog.totals)
     assert_equal(1.0, @flog.total_score)
     assert_equal(1.0, @flog.multiplier)

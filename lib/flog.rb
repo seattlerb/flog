@@ -408,9 +408,17 @@ class Flog < MethodBasedSexpProcessor
 
   def process_class(exp)
     super do
+      @method_locations[signature] ||= "#{exp.file}:#{exp.line}"
       penalize_by 1.0 do
         process exp.shift # superclass expression
       end
+      process_until_empty exp
+    end
+  end
+
+  def process_module(exp)
+    super do
+      @method_locations[signature] ||= "#{exp.file}:#{exp.line}"
       process_until_empty exp
     end
   end
