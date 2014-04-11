@@ -15,8 +15,6 @@ Hoe.plugin :seattlerb
 Hoe.spec 'flog' do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
-  self.rubyforge_name = 'seattlerb'
-
   self.flog_method = :max_method
   self.flog_threshold = timebomb 150, 50, '2013-11-01', '2012-11-01'
 
