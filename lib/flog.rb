@@ -124,7 +124,7 @@ class Flog < MethodBasedSexpProcessor
 
   def calculate
     each_by_score threshold do |class_method, score, call_list|
-      klass = class_method.split(/#|::/).first
+      klass = class_method.scan(/.+(?=#|::)/).first
 
       method_scores[klass] << [class_method, score]
       scores[klass] += score
