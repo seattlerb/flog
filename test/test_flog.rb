@@ -540,8 +540,8 @@ class TestFlog < FlogTest
     @flog.calculate_total_scores
     @flog.calculate
 
-    assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)
-    assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
+    assert_equal({ 'MyKlass::Base' => 42.0 }, @flog.scores)
+    assert_equal({ 'MyKlass::Base' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
   end
 
   def test_reset
@@ -586,6 +586,35 @@ class TestFlog < FlogTest
     assert_equal(1.0, @flog.multiplier)
     assert_equal({ "Coder#happy?" => { :sample => 1.0 } }, @flog.calls)
     assert_equal({ "Coder" => 1.0 }, @flog.scores)
+  end
+
+  def test_method_scores
+    user_class = %(
+        module User
+          class Account
+            def blah n
+              puts "blah" * n
+            end
+          end
+
+          class Profile
+            def bleh n
+              puts "bleh" * n
+            end
+          end
+        end
+      )
+    user_file = "user.rb"
+
+    @flog.flog_ruby user_class, user_file
+    @flog.calculate_total_scores
+    @flog.calculate
+
+    expected = {
+      "User::Account"=>[["User::Account#blah", 2.2]],
+      "User::Profile"=>[["User::Profile#bleh", 2.2]]
+    }
+    assert_equal(expected, @flog.method_scores)
   end
 
   def setup_my_klass
