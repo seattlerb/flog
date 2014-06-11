@@ -30,12 +30,13 @@ class FlogTask < Rake::TaskLib
   # Creates a new FlogTask instance with given +name+, +threshold+,
   # +dirs+, and +method+.
 
-  def initialize name = :flog, threshold = 200, dirs = nil, method = nil
-    @name      = name
-    @dirs      = dirs || %w(app bin lib spec test)
-    @threshold = threshold
-    @method    = method || :total_score
-    @verbose   = Rake.application.options.trace
+  def initialize name = :flog, threshold = 200, dirs = nil, method = nil, methods_only = false
+    @name         = name
+    @dirs         = dirs || %w(app bin lib spec test)
+    @threshold    = threshold
+    @method       = method || :total_score
+    @verbose      = Rake.application.options.trace
+    @methods_only = methods_only
 
     yield self if block_given?
 
@@ -51,7 +52,7 @@ class FlogTask < Rake::TaskLib
     desc "Analyze for code complexity in: #{dirs.join(', ')}"
     task name do
       require "flog_cli"
-      flog = FlogCLI.new :continue => true, :quiet => true
+      flog = FlogCLI.new :continue => true, :quiet => true, :methods => @methods_only
       flog.flog(*dirs)
 
       desc, score = flog.send method
