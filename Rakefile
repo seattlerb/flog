@@ -31,8 +31,11 @@ task :debug do
 
   file = ENV["F"]
   ruby = ENV["R"]
+  details = ENV["D"]
 
   flog = FlogCLI.new :parser => RubyParser
+
+  flog.option[:details] = true if details
 
   if file then
     flog.flog file
