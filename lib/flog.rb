@@ -47,7 +47,7 @@ class Flog < MethodBasedSexpProcessor
                          2
                        when /^1\.9/ then
                          1.5
-                       when /^2\.[01]/ then
+                       when /^2\./ then
                          1
                        else
                          5

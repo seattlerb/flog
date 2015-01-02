@@ -135,7 +135,8 @@ class TestFlog < FlogTest
     bonus = case RUBY_VERSION
             when /^1\.8\.7/ then 0.4
             when /^1\.9/    then 0.3
-            when /^2\.[01]/ then 0.2
+            when /^2\./     then 0.2
+            else raise "Unhandled version #{RUBY_VERSION}"
             end
 
     bonus += Flog::OTHER_SCORES[:to_proc_normal]
