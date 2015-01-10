@@ -1,3 +1,9 @@
+=== 4.3.1 / 2015-01-09
+
+* 1 bug fix:
+
+  * Fixed to_proc_normal scoring on ruby 2.2+. (teoljungberg)
+
 === 4.3.0 / 2014-07-18
 
 * 1 minor enhancement:
