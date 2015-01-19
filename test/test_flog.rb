@@ -501,7 +501,7 @@ class TestFlog < FlogTest
     assert_equal exp.keys.sort_by(&:to_s), act.keys.sort_by(&:to_s)
 
     exp.keys.each do |k|
-      assert_in_epsilon exp[k], act[k], 0.001, k
+      assert_in_epsilon exp[k], act[k], 0.001, "key = #{k.inspect}"
     end
   end
 
