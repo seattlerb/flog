@@ -2,7 +2,7 @@
 
 home :: http://ruby.sadi.st/
 code :: https://github.com/seattlerb/flog
-rdoc :: http://seattlerb.rubyforge.org/flog
+rdoc :: http://docs.seattlerb.org/flog
 vim  :: http://github.com/sentientmonkey/vim-flog
 
 == DESCRIPTION:
