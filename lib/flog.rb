@@ -11,6 +11,8 @@ class File
 end
 
 class Flog < MethodBasedSexpProcessor
+  attr_reader :call_path
+
   VERSION = "4.3.2" # :nodoc:
 
   ##
@@ -233,6 +235,7 @@ class Flog < MethodBasedSexpProcessor
     @method_locations    = {}
     @mass                = {}
     @parser              = nil
+    @call_path           = {}
     self.auto_shift_type = true
     self.reset
   end
@@ -393,7 +396,7 @@ class Flog < MethodBasedSexpProcessor
     end
 
     add_to_score name, SCORES[name]
-
+    @call_path[signature] = exp.file unless signature == 'main#none'
     s()
   end
 
