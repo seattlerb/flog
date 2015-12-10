@@ -38,7 +38,7 @@ class TestFlog < FlogTest
   def test_average
     test_process_and
 
-    assert_equal 1.0, @flog.average
+    assert_in_epsilon 1.0, @flog.average
   end
 
   def test_flog
@@ -47,7 +47,7 @@ class TestFlog < FlogTest
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
-    assert_equal 1.6, @flog.total_score unless @flog.option[:methods]
+    assert_in_epsilon 1.6, @flog.total_score unless @flog.option[:methods]
     assert_equal 3, @flog.mass["-"]
   end
 
@@ -61,7 +61,7 @@ class TestFlog < FlogTest
     exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
     assert_equal exp, @flog.calls
 
-    assert_equal 1.6, @flog.total_score unless @flog.option[:methods]
+    assert_in_epsilon 1.6, @flog.total_score unless @flog.option[:methods]
     assert_equal 3, @flog.mass[file]
   end
 
@@ -81,11 +81,11 @@ class TestFlog < FlogTest
   end
 
   def test_penalize_by
-    assert_equal 1, @flog.multiplier
+    assert_in_epsilon 1, @flog.multiplier
     @flog.penalize_by 2 do
-      assert_equal 3, @flog.multiplier
+      assert_in_epsilon 3, @flog.multiplier
     end
-    assert_equal 1, @flog.multiplier
+    assert_in_epsilon 1, @flog.multiplier
   end
 
   def test_process_alias
@@ -461,18 +461,18 @@ class TestFlog < FlogTest
   end
 
   def test_score_method
-    assert_equal 3.0, @flog.score_method(:blah       => 3.0)
-    assert_equal 4.0, @flog.score_method(:assignment => 4.0)
-    assert_equal 2.0, @flog.score_method(:branch     => 2.0)
-    assert_equal 5.0, @flog.score_method(:blah       => 3.0, # distance formula
-                                         :branch     => 4.0)
+    assert_in_epsilon 3.0, @flog.score_method(:blah       => 3.0)
+    assert_in_epsilon 4.0, @flog.score_method(:assignment => 4.0)
+    assert_in_epsilon 2.0, @flog.score_method(:branch     => 2.0)
+    assert_in_epsilon 5.0, @flog.score_method(:blah       => 3.0, # distance formula
+                                              :branch     => 4.0)
   end
 
   def test_total_score
     @flog.add_to_score "blah", 2
     @flog.calculate_total_scores
 
-    assert_equal 2.0, @flog.total_score
+    assert_in_epsilon 2.0, @flog.total_score
   end
 
   def test_max_method
@@ -494,7 +494,7 @@ class TestFlog < FlogTest
     }
     @flog.calculate_total_scores
 
-    assert_equal 16.0, @flog.max_score
+    assert_in_epsilon 16.0, @flog.max_score
   end
 
   def assert_hash_in_epsilon exp, act
@@ -527,7 +527,7 @@ class TestFlog < FlogTest
 
   def test_threshold
     test_flog
-    assert_equal Flog::THRESHOLD * 1.6, @flog.threshold
+    assert_in_epsilon Flog::THRESHOLD * 1.6, @flog.threshold
   end
 
   def test_no_threshold
@@ -561,8 +561,8 @@ class TestFlog < FlogTest
 
     assert_equal({ 'User#blah' => 'user.rb:3' }, @flog.method_locations)
     assert_equal({ "User#blah" => 2.2 }, @flog.totals)
-    assert_equal(2.2, @flog.total_score)
-    assert_equal(1.0, @flog.multiplier)
+    assert_in_epsilon(2.2, @flog.total_score)
+    assert_in_epsilon(1.0, @flog.multiplier)
     assert_equal({ "User#blah" => { :* => 1.2, :puts => 1.0 } }, @flog.calls)
     assert_equal({ "User" => 2.2 }, @flog.scores)
 
@@ -583,8 +583,8 @@ class TestFlog < FlogTest
 
     assert_equal({ 'Coder#happy?' => 'coder.rb:3' }, @flog.method_locations)
     assert_equal({ "Coder#happy?" => 1.0 }, @flog.totals)
-    assert_equal(1.0, @flog.total_score)
-    assert_equal(1.0, @flog.multiplier)
+    assert_in_epsilon(1.0, @flog.total_score)
+    assert_in_epsilon(1.0, @flog.multiplier)
     assert_equal({ "Coder#happy?" => { :sample => 1.0 } }, @flog.calls)
     assert_equal({ "Coder" => 1.0 }, @flog.scores)
   end
