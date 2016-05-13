@@ -2,6 +2,7 @@ require "rubygems"
 require "optparse"
 require "forwardable"
 
+require "path_expander"
 require "flog"
 
 class FlogCLI
@@ -12,21 +13,14 @@ class FlogCLI
   def_delegators :@flog, :threshold, :total_score, :no_method, :calculate_total_scores
   def_delegators :@flog, :max_method
 
-  ##
-  # Expands +*dirs+ to all files within that match ruby and rake extensions.
-  # --
-  # REFACTOR: from flay
+  def self.run args = ARGV
+    load_plugins
 
-  def self.expand_dirs_to_files *dirs
-    extensions = %w[rb rake]
+    options = parse_options args
 
-    dirs.flatten.map { |p|
-      if File.directory? p then
-        Dir[File.join(p, '**', "*.{#{extensions.join(',')}}")]
-      else
-        p
-      end
-    }.flatten.sort
+    flogger = new options
+    flogger.flog args
+    flogger.report
   end
 
   ##
@@ -161,7 +155,10 @@ class FlogCLI
   # errors, and traversing subdirectories intelligently.
 
   def flog(*files_or_dirs)
-    files = FlogCLI.expand_dirs_to_files(*files_or_dirs)
+    expander = PathExpander.new files_or_dirs, "**/*.{rb,rake}"
+    files = expander.process
+    files << "-" if files.empty?
+
     @flog.flog(*files)
   end
 

@@ -2,14 +2,6 @@
 
 require "flog_cli"
 
-FlogCLI.load_plugins
-
-options = FlogCLI.parse_options ARGV
-
-ARGV << "-" if ARGV.empty?
-
-flogger = FlogCLI.new options
-flogger.flog ARGV
-flogger.report
+FlogCLI.run
 
 exit 0

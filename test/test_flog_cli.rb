@@ -12,13 +12,6 @@ class TestFlogCLI < FlogTest
     @flog = FlogCLI.new :parser => RubyParser
   end
 
-  def test_cls_expand_dirs_to_files
-    expected = %w(lib/flog.rb lib/flog_cli.rb lib/flog_task.rb lib/gauntlet_flog.rb)
-    assert_equal expected, FlogCLI.expand_dirs_to_files('lib')
-    expected = %w(Rakefile)
-    assert_equal expected, FlogCLI.expand_dirs_to_files('Rakefile')
-  end
-
   def test_cls_parse_options
     # defaults
     opts = FlogCLI.parse_options
