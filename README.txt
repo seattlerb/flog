@@ -13,6 +13,10 @@ report. The higher the score, the more pain the code is in.
 == FEATURES/PROBLEMS:
 
 * Easy to read reporting of complexity/pain.
+* Uses path_expander, so you can use:
+  * dir_arg -- expand a directory automatically
+  * @file_of_args -- persist arguments in a file
+  * -path_to_subtract -- ignore intersecting subsets of files/directories
 
 == SYNOPSIS:
 
@@ -27,8 +31,9 @@ report. The higher the score, the more pain the code is in.
 
 == REQUIREMENTS:
 
-* ruby2ruby (only for -v)
+* ruby2ruby (soft dependency: only for -v)
 * ruby_parser
+* path_expander
 
 == INSTALL:
 
