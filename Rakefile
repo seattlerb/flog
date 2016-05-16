@@ -12,6 +12,7 @@ Hoe.add_include_dirs("../../ruby_parser/dev/lib",
                      "lib")
 
 Hoe.plugin :seattlerb
+Hoe.plugin :rdoc
 
 Hoe.spec 'flog' do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
