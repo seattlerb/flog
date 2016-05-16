@@ -53,7 +53,11 @@ class FlogTask < Rake::TaskLib
     task name do
       require "flog_cli"
       flog = FlogCLI.new :continue => true, :quiet => true, :methods => @methods_only
-      flog.flog(*dirs)
+
+      expander = PathExpander.new dirs, "**/*.{rb,rake}"
+      files = expander.process
+
+      flog.flog(*files)
 
       desc, score = flog.send method
       desc, score = "total", desc unless score # total only returns a number
