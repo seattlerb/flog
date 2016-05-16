@@ -154,8 +154,9 @@ class FlogCLI
   end
 
   ##
-  # Flog the given files or directories. Smart. Deals with "-", syntax
-  # errors, and traversing subdirectories intelligently.
+  # Flog the given files. Deals with "-", syntax errors, and
+  # traversing subdirectories intelligently. Use PathExpander to
+  # process dirs into files.
 
   def flog(*files)
     files << "-" if files.empty?
