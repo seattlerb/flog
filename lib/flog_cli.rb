@@ -16,10 +16,13 @@ class FlogCLI
   def self.run args = ARGV
     load_plugins
 
+    expander = PathExpander.new args, "**/*.{rb,rake}"
+    files = expander.process
+
     options = parse_options args
 
     flogger = new options
-    flogger.flog args
+    flogger.flog(*files)
     flogger.report
   end
 
@@ -154,11 +157,8 @@ class FlogCLI
   # Flog the given files or directories. Smart. Deals with "-", syntax
   # errors, and traversing subdirectories intelligently.
 
-  def flog(*files_or_dirs)
-    expander = PathExpander.new files_or_dirs, "**/*.{rb,rake}"
-    files = expander.process
+  def flog(*files)
     files << "-" if files.empty?
-
     @flog.flog(*files)
   end
 
