@@ -532,7 +532,7 @@ class TestFlog < FlogTest
 
   def test_no_threshold
     @flog.option[:all] = true
-    assert_equal nil, @flog.threshold
+    assert_nil @flog.threshold
   end
 
   def test_calculate
