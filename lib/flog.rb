@@ -170,6 +170,7 @@ class Flog < MethodBasedSexpProcessor
 
   def flog(*files)
     files.each do |file|
+      next if File.directory? file
       next unless file == '-' or File.readable? file
 
       ruby = file == '-' ? $stdin.read : File.binread(file)
