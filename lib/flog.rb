@@ -483,6 +483,8 @@ class Flog < MethodBasedSexpProcessor
     s()
   end
 
+  Rational = Integer unless defined? Rational # 1.8 / 1.9
+
   def process_lit(exp)
     value = exp.shift
     case value
