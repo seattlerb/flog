@@ -489,12 +489,12 @@ class Flog < MethodBasedSexpProcessor
     when 0, -1 then
       # ignore those because they're used as array indicies instead of
       # first/last
-    when Integer then
+    when Integer, Rational then
       add_to_score :lit_fixnum
     when Float, Symbol, Regexp, Range then
       # do nothing
     else
-      raise value.inspect
+      raise "Unhandled lit: #{value.inspect}:#{value.class}"
     end
     s()
   end
