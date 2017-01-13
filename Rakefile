@@ -20,6 +20,8 @@ Hoe.spec 'flog' do
   self.flog_method = :max_method
   self.flog_threshold = timebomb 150, 50, '2013-11-01', '2012-11-01'
 
+  license "MIT"
+
   dependency "sexp_processor", "~> 4.4"
   dependency "ruby_parser",    ["~> 3.1", "> 3.1.0"]
   dependency "path_expander", "~> 1.0"
