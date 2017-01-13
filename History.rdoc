@@ -1,3 +1,9 @@
+=== 4.4.1 / 2017-01-13
+
+* 1 bug fix:
+
+  * Fixed scoring of Rational lits.
+
 === 4.4.0 / 2016-05-16
 
 * 1 minor enhancement:
