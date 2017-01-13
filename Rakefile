@@ -43,6 +43,13 @@ task :debug do
   flog.option[:details] = true if details
 
   if file then
+    if File.directory? file then # quick hack to get directory scanning going
+      argv = [file]
+      argv.unshift "-v" if ENV["V"]
+
+      FlogCLI.run argv
+      exit 0
+    end
     flog.flog file
   else
     flog.flog_ruby ruby, "-"
