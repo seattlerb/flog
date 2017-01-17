@@ -527,12 +527,19 @@ class TestFlog < FlogTest
 
   def test_threshold
     test_flog
-    assert_in_epsilon Flog::THRESHOLD * 1.6, @flog.threshold
+    assert_in_epsilon 0.6 * 1.6, @flog.threshold
   end
 
   def test_no_threshold
     @flog.option[:all] = true
     assert_nil @flog.threshold
+  end
+
+  def test_threshold_custom
+    @flog.threshold = 0.33
+
+    test_flog
+    assert_in_epsilon 0.33 * 1.6, @flog.threshold
   end
 
   def test_calculate

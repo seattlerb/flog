@@ -16,7 +16,9 @@ class Flog < MethodBasedSexpProcessor
   ##
   # Cut off point where the report should stop unless --all given.
 
-  THRESHOLD = 0.60
+  DEFAULT_THRESHOLD = 0.60
+
+  THRESHOLD = DEFAULT_THRESHOLD # :nodoc:
 
   ##
   # The scoring system hash. Maps node type to score.
@@ -98,6 +100,7 @@ class Flog < MethodBasedSexpProcessor
   attr_reader :calls, :option, :mass
   attr_reader :method_scores, :scores
   attr_reader :total_score, :totals
+  attr_writer :threshold
 
   # :startdoc:
 
@@ -233,6 +236,7 @@ class Flog < MethodBasedSexpProcessor
     @method_locations    = {}
     @mass                = {}
     @parser              = nil
+    @threshold           = option[:threshold] || DEFAULT_THRESHOLD
     self.auto_shift_type = true
     self.reset
   end
@@ -294,7 +298,7 @@ class Flog < MethodBasedSexpProcessor
   # Final threshold that is used for report
 
   def threshold
-    option[:all] ? nil : total_score * THRESHOLD
+    option[:all] ? nil : total_score * @threshold
   end
 
   ##

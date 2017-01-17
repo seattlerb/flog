@@ -37,10 +37,23 @@ class TestFlogCLI < FlogTest
       "--extended"     => :extended,
       "-s"             => :score,
       "--score"        => :score,
+      "-t"             => [:threshold, "75", 0.75],
+      "--threshold"    => [:threshold, "75", 0.75],
       "-v"             => :verbose,
       "--verbose"      => :verbose,
-    }.each do |key, val|
-      assert_equal true, FlogCLI.parse_options(key)[val]
+      # TODO: (maybe)
+      # "-h", "--help", "Show this message."
+      # "-I dir1,dir2,dir3", Array, "Add to LOAD_PATH."
+      # "--18", "Use a ruby 1.8 parser."
+      # "--19", "Use a ruby 1.9 parser."
+    }.each do |args, key|
+      exp = true
+      if key.is_a? Array then
+        key, arg, exp = key
+        args = [args, arg]
+      end
+
+      assert_equal exp, FlogCLI.parse_options(args)[key]
     end
   end
 

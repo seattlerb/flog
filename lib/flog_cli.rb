@@ -120,6 +120,10 @@ class FlogCLI
         option[:score] = true
       end
 
+      opts.on("-tN", "--threshold=N", Integer, "Set the report cutoff threshold (def: 60%).") do |n|
+        option[:threshold] = n / 100.0
+      end
+
       opts.on("-v", "--verbose", "Display progress during processing.") do
         option[:verbose] = true
       end
