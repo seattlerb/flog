@@ -1,3 +1,11 @@
+=== 4.5.0 / 2017-01-19
+
+* 3 minor enhancements:
+
+  * Added -t=N and --threshold N processing to FlogCLI.
+  * Added tweakable threshold to Flog (still defaults to 60%).
+  * Renamed Flog::THRESHOLD to Flog::DEFAULT_THRESHOLD (but kept an alias around).
+
 === 4.4.1 / 2017-01-13
 
 * 1 bug fix:
