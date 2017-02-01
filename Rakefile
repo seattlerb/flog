@@ -22,7 +22,7 @@ Hoe.spec 'flog' do
 
   license "MIT"
 
-  dependency "sexp_processor", "~> 4.4"
+  dependency "sexp_processor", "~> 4.8"
   dependency "ruby_parser",    ["~> 3.1", "> 3.1.0"]
   dependency "path_expander", "~> 1.0"
 end
