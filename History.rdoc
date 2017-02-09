@@ -1,3 +1,9 @@
+=== 4.6.1 / 2017-02-08
+
+* 1 bug fix:
+
+  * Fixed max line number in range report. AKA I'm an idiot.
+
 === 4.6.0 / 2017-02-01
 
 * 2 minor enhancements:
