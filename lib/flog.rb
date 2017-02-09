@@ -467,7 +467,7 @@ class Flog < MethodBasedSexpProcessor
       if t == :call and r == nil and submsg = dsl_name?(a) then
         m = "#{m}(#{submsg})" if m and [String, Symbol].include?(submsg.class)
         in_klass m do                             # :task/namespace
-          in_method submsg, exp.file, exp.line, exp.max_line do # :name
+          in_method submsg, exp.file, exp.line, exp.line_max do # :name
             process_until_empty exp
           end
         end
