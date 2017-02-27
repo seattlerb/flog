@@ -1,0 +1,347 @@
+=== 4.3.0 / 2014-07-18
+
+* 1 minor enhancement:
+
+  * Added methods_only param to FlogTask. (jocranford)
+
+=== 4.2.1 / 2014-05-29
+
+* 2 bug fixes:
+
+  * Fixed grouping by class name. (guilhermesimoes)
+  * Removed dead rubyforge setting in Rakefile
+
+=== 4.2.0 / 2013-10-18
+
+* 3 minor enhancements:
+
+  * Added --extended / -e to put file:line output on next line (for rubymine & friends)
+  * Extracted MethodBasedSexpProcessor and pushed up to sexp_processor gem.
+  * Updated dependency on sexp_processor to ~> 4.4.
+
+=== 4.1.2 / 2013-09-05
+
+* 2 bug fixes:
+
+  * Don't even record a score if method stack is empty and user used --methods-only.
+  * Fixed Flog task's default method. (jasonrobertfox)
+
+=== 4.1.1 / 2013-07-11
+
+* 1 minor enhancement:
+
+  * Added max_method to delegators.
+
+* 1 bug fix:
+
+  * Fixed FlogTask to use FlogCLI. (envygeeks)
+
+=== 4.1.0 / 2013-05-10
+
+* 3 minor enhancements:
+
+  * Cleaned up tests by adding assert_hash_in_epsilon. yay!
+  * Fixed method_location is now cleared on #reset. (makaroni4)
+  * to_proc_normal is now penalized based on RUBY_VERSION. Scores were benchmarked.
+
+* 1 bug fix:
+
+  * Fixed code/home urls in readme/gem.
+
+=== 4.0.0 / 2013-04-18
+
+* 1 major enhancement:
+
+  * Renamed Flog#methods to #method_scores. (makaroni4)
+
+* 4 minor enhancements:
+
+  * Added accessors for methods, scores. Now available for CIs! (makaroni4)
+  * Refactored calculations down to 2 methods: total_score and totals. (makaroni4)
+  * Refactored to #calculate, #threshold. (makaroni4)
+  * Track stack of nested sclass scopes for parser (pithyless)
+
+=== 3.2.3 / 2013-03-21
+
+* 1 bug fix:
+
+  * Don't blow up if a path doesn't exist or isn't readable.
+
+=== 3.2.2 / 2013-01-22
+
+* 1 bug fix:
+
+  * Fixed stupid error when run on empty file.
+
+=== 3.2.1 / 2012-12-19
+
+* 1 bug fix:
+
+  * Relaxed (and fixed) the ruby_parser dependency.
+
+=== 3.2.0 / 2012-12-18
+
+* 4 minor enhancements:
+
+  * Ensure rake/tasklib is loaded when defining FlogTask. (ferrous26)
+  * Fixed reporting / recording of methods in singleton class blocks. (mihu)
+  * Refactored error handling code to flog_ruby. Calls flog_ruby! for actual work
+  * Refactored ruby processing code to flog_ruby!
+
+* 1 bug fix:
+
+  * Fixed flogging of || iters. (JacobNinja)
+
+=== 3.1.0 / 2012-11-16
+
+* 4 minor enhancements:
+
+  * --quiet option is now false by default, and changed to silence parse warnings.
+  * Added max_score and max_method. (aselder)
+  * FlogTask can now take a method to use to figure out score, allowing for total or max_score.
+  * Switched to capturing RubyParser::SyntaxError (RP 3.0 change).
+
+* 2 bug fixes:
+
+  * Avoid redefined warning for File::RUBY19. (svendahlstrand)
+  * Fixed flog to default to RubyParser if not specified. Allows cleaner programmatic access.
+
+=== 3.0.0 / 2012-11-02
+
+* 1 minor enhancement:
+
+  * Added a timeout handler to skip when RubyParser times out on a large file
+
+* 1 bug fix:
+
+  * Fixed handling of plain literals in masgn in args.
+
+=== 3.0.0.b3 / 2012-10-22
+
+* 4 minor enhancements:
+
+  * Added .rake as a supported extension.
+  * Create a new parser for every file, preventing state barkification
+  * Extended DSL support to include hash args (eg task :blah => :dep).
+  * Extended DSL support to report nested names (eg namespace(blah)::task#woot)
+
+=== 3.0.0.b2 / 2012-08-07
+
+* 1 bug fix:
+
+  * Fix for sexp structure changes (no arglists).
+
+=== 3.0.0.b1 / 2012-07-26
+
+* 4 minor enhancements:
+
+  * Added --18 and --19 flags to specify parser. Defaults to hybrid.
+  * Explicitly use Ruby18Parser to remove deprecation warnings.
+  * Modified processor to deal with cleaner sexps from RP 3.x.
+  * Use File.binread (File.read in 1.8) to bypass encoding errors
+
+* 2 bug fixes:
+
+  * Cleaned up some 1.9 warnings.
+  * Fixed failing tests against ruby_parser 3
+
+=== 2.5.3 / 2011-09-21
+
+* 1 minor enhancement:
+
+  * class_stack now always pushes on symbols or strings for class names.
+
+* 1 bug fix:
+
+  * Fixed klass_name returning an ugly mix of sexps and strings.
+
+=== 2.5.2 / 2011-08-11
+
+* 1 minor enhancement:
+
+  * Improved parse error output. (impurist)
+
+=== 2.5.1 / 2011-02-18
+
+* 3 minor enhancements:
+
+  * Added RegexpError to error handler.
+  * Improved error output and suggest --continue
+  * Record the flog score for the full class name, not just suffix. (dkubb)
+
+* 1 bug fix:
+
+  * Fixed block_pass when passed a multi-level const (xavier)
+
+=== 2.5.0 / 2010-09-01
+
+* 1 major enhancement:
+
+  * Added plugin system. Define a module under Flog to extend it.
+
+* 3 minor enhancements:
+
+  * Added special case penalty for wtf to_proc: blah(&b = proc {...}) (benjaminb)
+  * Improved tests and test coverage.
+  * Unfactored & refactored report code. Much cleaner and  more maintainable now.
+
+* 2 bug fixes:
+
+  * Fixed API change for FlogTask (andreacampi)
+  * Fixed bad edgecase handler for block_pass (benjaminb)
+
+=== 2.4.0 / 2009-12-15
+
+* 4 minor enhancements:
+
+  * Cleaned method_name to return "#method" or "::method".
+  * DSL reporting now handles regexp literals for 'method' names (Marty Andrews)
+  * Improved tests for process_iter's myriad complexities.
+  * More doco!
+
+* 1 bug fix:
+
+  * Fixed DSL reporting excluding solo-blocks. (eg a single rake task)
+
+=== 2.3.0 / 2009-12-09
+
+* 1 major enhancement:
+
+  * Added file:line info to the flog report (Marty Andrews)
+
+* 13 minor enhancements:
+
+  * Added .autotest.
+  * Deleted pre-gauntlet scripts.
+  * Flog#method_name now at least tries show when it is a class method.
+  * Flog.parse_options now takes args directly.
+  * Removed Flog#increment_total_score_by.
+  * Removed Flog#output_summary.
+  * Removed Flog#process_attrset.
+  * Removed Flog#record_method_score.
+  * Removed Flog#summarize_method.
+  * Removed Flog::default_options.
+  * Renamed Flog#analyze_list to process_until_empty.
+  * Renamed Flog#options to #option
+  * Rewrote entire test suite (3100 lines down!). Cleaner and less brittle.
+
+=== 2.2.0 / 2009-08-14
+
+* 1 minor enhancement:
+
+  * #mass pushed up to sexp_processor
+
+* 5 bug fixes:
+
+  * --group didn't use canonical class name.
+  * Fixed bin/flog to use flog, not flog_files (removed in last rev)
+  * Fixed crasher when processing a block with empty goalposts.
+  * Switching to ruby_parser broke ERB syntax error handling. (imccoy)
+  * skip empty files instead of crashing. yay?
+
+=== 2.1.2 / 2009-06-24
+
+* 1 bug fix:
+
+  * Fixed dependency spec on ruby_parser. (jan)
+
+=== 2.1.1 / 2009-06-23
+
+* 2 minor enhancements:
+
+  * Added mass accessor for gauntlet and other automated processors
+  * Switched from ParseTree to ruby_parser. Only 3x slower\! :(
+
+=== 2.1.0 / 2009-03-16
+
+* 5 minor enhancements:
+
+  * Added --group to aggregate and sort by class scores.
+  * Added flog_task.rb
+  * Made -q default, removed -n.
+  * Made report output more readable and processable.
+  * Moved option processing from bin/flog to lib/flog.rb for better testing.
+
+* 1 bug fix:
+
+  * removed extra attr_readers for total and average. doh
+
+=== 2.0.0 / 2009-01-20
+
+* 1 major enhancement:
+
+  * Pulled in and merged Rick Bradley's awesome flame project into flog.
+
+* 1 minor enhancement:
+
+  * Added gauntlet plugin
+
+* 1 bug fix:
+
+  * "hugh sasse".split(/\s/).map{|x|x.capitalize}.join(" ") # :-)
+
+=== 1.2.0 / 2008-10-22
+
+* 14 minor enhancements:
+
+  * Added -c flag to continue dispite errors.
+  * Added -m to only report code in methods (skips #none).
+  * Added -n flag to give NO method details (summary only)
+  * Added -n to skip method details... pussies should learn grep.
+  * Added -q to quiet method details (total per method only)
+  * Added avg & stddev to total.
+  * Added avg score per method to report.
+  * Added lots of doco from contributors. Thanks Hugh Sasse!
+  * Fixed class names when const2/3.
+  * Fixed unified ruby changes
+  * Refactored flog with help from flay.
+  * Refactored get_source_index
+  * Refactored into gem_updater.rb and cleaned up.
+  * Works with new incremental rubygems, albiet slower than before.
+
+=== 1.1.0 / 2007-08-21
+
+* 3 major enhancements:
+
+  * Added assignments and branches and a lot of other stuff. rad.
+  * Added process_iter section for DSL style blocks (rake tasks etc).
+  * Made Flog usable as a library.
+
+* 12 minor enhancements:
+
+  * Added -a flag to turn off threshold culling for other tools.
+  * Added -s for summarizing the score.
+  * Added -v feedback to know what file you're flogging.
+  * Added branching penalty so tons of nested conditionals get beat down.
+  * Added send (3).
+  * Capture and ignore SyntaxErrors from template/generator code. Stupid DHH.
+  * Report can now take an IO object.
+  * block_args now penalizes all non-benign forms of block_pass. 
+  * Added usage to bin/flog. Moved -I processing to bin/flog.
+  * Added unpack.rb and update_scores.rb at base level (not installed)
+  * Added scoring for block_pass.
+  * Converted totals to use distance formula on ABC's.
+
+* 3 bug fixes:
+
+  * Ran flog on every latest gem available. Found a bunch of problems.
+  * Use a stack for both class/module and method accounting.
+  * block_args weren't processing the arg
+
+=== 1.0.2 / 2007-08-01
+
+* 1 bug fix:
+
+  * stupid rubygems bin wrapper... *sigh*
+
+=== 1.0.1 / 2007-08-01
+
+* 1 bug fix:
+
+  * New Rule: NEVER release new software when exhausted: Fixed dependency list. 
+
+=== 1.0.0 / 2007-08-01
+
+* 1 major enhancement:
+
+  * Birthday!
