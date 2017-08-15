@@ -399,6 +399,7 @@ class Flog < MethodBasedSexpProcessor
 
     s()
   end
+  alias :process_safe_call :process_call
 
   def process_case(exp)
     add_to_score :branch
