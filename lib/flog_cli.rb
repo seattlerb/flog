@@ -19,6 +19,9 @@ class FlogCLI
     expander = PathExpander.new args, "**/*.{rb,rake}"
     files = expander.process
 
+    abort "no files or stdin (-) to process, aborting." if
+      files.empty? and args.empty?
+
     options = parse_options args
 
     flogger = new options
