@@ -143,10 +143,12 @@ class Flog < MethodBasedSexpProcessor
   def dsl_name? args
     return false unless args and not args.empty?
 
-    first_arg = args.first
-    first_arg = first_arg[1] if first_arg[0] == :hash
+    first_arg, = args
+    first_arg = first_arg[1] if first_arg.sexp_type == :hash
 
-    [:lit, :str].include? first_arg[0] and first_arg[1]
+    type, value, * = first_arg
+
+    value if [:lit, :str].include? type
   end
 
   ##
@@ -362,7 +364,7 @@ class Flog < MethodBasedSexpProcessor
 
     add_to_score :block_pass
 
-    case arg.first
+    case arg.sexp_type
     when :lvar, :dvar, :ivar, :cvar, :self, :const, :colon2, :nil then # f(&b)
       # do nothing
     when :lit, :call then                                              # f(&:b)
@@ -455,7 +457,7 @@ class Flog < MethodBasedSexpProcessor
     exp.delete 0 # { || ... } has 0 in arg slot
 
     if context == [:block, :iter] or context == [:iter] then
-      recv = exp.first
+      recv, = exp
 
       # DSL w/ names. eg task :name do ... end
       #   looks like s(:call, nil, :task, s(:lit, :name))
