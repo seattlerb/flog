@@ -131,14 +131,6 @@ class FlogCLI
         option[:verbose] = true
       end
 
-      opts.on("--18", "Use a ruby 1.8 parser.") do
-        option[:parser] = Ruby18Parser
-      end
-
-      opts.on("--19", "Use a ruby 1.9 parser.") do
-        option[:parser] = Ruby19Parser
-      end
-
       next if self.plugins.empty?
       opts.separator "Plugin options:"
 
