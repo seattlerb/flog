@@ -1,5 +1,8 @@
 require "minitest/autorun"
 require "flog"
+require 'tempfile'
+require 'tmpdir'
+
 
 class Flog
   attr_writer :calls
@@ -616,6 +619,56 @@ class TestFlog < FlogTest
 
     @flog.flog_ruby user_class, user_file
     @flog.calculate_total_scores
+    @flog.calculate
+
+    expected = {
+      "User::Account"=>[["User::Account#blah", 2.2]],
+      "User::Profile"=>[["User::Profile#bleh", 2.2]]
+    }
+    assert_equal(expected, @flog.method_scores)
+  end
+
+  def test_flog_with_path_expander
+    account = %(
+      module User
+        class Account
+          def blah n
+            puts "blah" * n
+          end
+        end
+      end
+    )
+    profile = %(
+      module User
+        class Profile
+          def bleh n
+            puts "bleh" * n
+          end
+        end
+      end
+    )
+
+    # Lambda to make a temporary data file called 'name' in directory named 'where'
+    # with contents of 'data'
+    temp_data = -> (name, where, data) {
+      file = Tempfile.new([name, '.rb'], where)
+      file << data
+      file.close
+      file.open
+    }
+
+    # Make a temporary dir with account data
+    Dir.mktmpdir() { |dir|
+      temp_data.call('dir', dir.to_s, account)
+      # Make a a temporary subdirectory of dir with profile data
+      Dir.mktmpdir(nil, dir) { |sub_dir|
+        temp_data.call('sub_dir', sub_dir.to_s, profile)
+        Dir.chdir(dir) {
+          # tell flog to process from the temporary dir downward
+          @flog.flog dir.to_s
+        }
+      }
+    }
     @flog.calculate
 
     expected = {
