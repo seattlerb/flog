@@ -1,6 +1,7 @@
 require "sexp_processor"
 require "ruby_parser"
 require "timeout"
+require 'path_expander'
 
 class File
   RUBY19 = "<3".respond_to? :encoding unless defined? RUBY19 # :nodoc:
@@ -11,7 +12,7 @@ class File
 end
 
 class Flog < MethodBasedSexpProcessor
-  VERSION = "4.6.2" # :nodoc:
+  VERSION = "4.7.0" # :nodoc:
 
   ##
   # Cut off point where the report should stop unless --all given.
@@ -167,22 +168,33 @@ class Flog < MethodBasedSexpProcessor
     end
   end
 
-  ##
+  #
   # Flog the given files. Deals with "-", and syntax errors.
   #
-  # Not as smart as FlogCLI's #flog method as it doesn't traverse
-  # dirs. Use PathExpander to expand dirs into files.
+  def expand_file(file)
+    expander = PathExpander.new [file], "**/*.{rb,rake}"
+    expander.process
+  end
 
+  # NOW as smart as FlogCLI's #flog method as it traverses
+  # dirs using PathExpander.
   def flog(*files)
+    flogged = false
     files.each do |file|
-      next unless file == '-' or File.readable? file
-
-      ruby = file == '-' ? $stdin.read : File.binread(file)
-
-      flog_ruby ruby, file
+      if file == '-'
+        flog_ruby $stdin.read, file
+        flogged = true
+      else
+        expand_file(file).each do |elem|
+          next unless File.readable? elem
+          flogged = true
+          flog_ruby File.binread(elem), elem
+        end
+      end
     end
 
     calculate_total_scores
+    flogged
   end
 
   ##
