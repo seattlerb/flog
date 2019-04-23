@@ -1,6 +1,6 @@
-#!/usr/local/bin/ruby -w
+#!/usr/bin/env ruby -w
 
-require "flog_cli"
+require_relative File.join("..", "lib", "flog_cli")
 
 FlogCLI.run
 
