@@ -1,3 +1,15 @@
+=== 4.7.0 / 2019-04-23
+
+* 7 minor enhancements:
+
+ * Modified Flog#flog to expand directories in its arguments into files
+ * Modified FlogCLI::run to use Flog#flog to expand directories into files
+ * Modified test_flog.rb to test expansion of dirs to files.
+ * Modified usage message of FlogCli to show standard input case.
+ * flog_cli.rb uses require_relative such that tests don't used an installed gem file.
+ * bin/flog uses require_relative such that tests don't used an installed gem file.
+ * Modified bin/flog to use /usr/bin/env to select the ruby interpreter.
+
 === 4.6.2 / 2018-02-14
 
 * 1 bug fix:

@@ -2,8 +2,7 @@ require "rubygems"
 require "optparse"
 require "forwardable"
 
-require "path_expander"
-require "flog"
+require_relative "flog"
 
 class FlogCLI
   extend Forwardable
@@ -16,16 +15,14 @@ class FlogCLI
   def self.run args = ARGV
     load_plugins
 
-    expander = PathExpander.new args, "**/*.{rb,rake}"
-    files = expander.process
-
     options = parse_options args
 
-    abort "no files or stdin (-) to process, aborting." if
-      files.empty? and args.empty?
+    abort "no files or stdin (-) to process, aborting." if args.empty?
 
     flogger = new options
-    flogger.flog(*files)
+    unless flogger.flog(*args)
+      abort "no readable source files to process, aborting."
+    end
     flogger.report
   end
 
@@ -74,6 +71,12 @@ class FlogCLI
     }
 
     OptionParser.new do |opts|
+      opts.banner =
+          "\nUsage:" \
+          "\n       flog [options] - # to read stdin." \
+          "\nor," \
+          "\n       flog [options] dir_or_file(s)\n\n"
+
       opts.separator "Standard options:"
 
       opts.on("-a", "--all", "Display all flog results, not top 60%.") do
@@ -154,8 +157,8 @@ class FlogCLI
 
   ##
   # Flog the given files. Deals with "-", syntax errors, and
-  # traversing subdirectories intelligently. Use PathExpander to
-  # process dirs into files.
+  # traversing subdirectories intelligently. PathExpander is used
+  # by Flog#flog to process dirs into files.
 
   def flog(*files)
     files << "-" if files.empty?
