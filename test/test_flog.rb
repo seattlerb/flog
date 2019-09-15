@@ -351,6 +351,19 @@ class TestFlog < FlogTest
     assert_process sexp, 2.3, :something => 1.0, :task => 1.0, :lit_fixnum => 0.3
   end
 
+  def test_process_iter_dsl_hash_when_hash_empty
+    # task({}) do
+    #   something
+    # end
+
+    sexp = s(:iter,
+             s(:call, nil, :task, s(:hash)),
+             nil,
+             s(:call, nil, :something))
+
+    assert_process sexp, 2.326, :something => 1.1, :task => 1.0, :branch => 1
+  end
+
   def test_process_iter_dsl_namespaced
     # namespace :blah do
     #   task :woot => 42 do
