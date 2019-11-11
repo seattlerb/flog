@@ -190,6 +190,11 @@ class TestFlog < FlogTest
     assert_process sexp, 1.0, :a => 1.0
   end
 
+  def test_process_safe_call
+    sexp = s(:safe_call, nil, :a)
+    assert_process sexp, 1.0, :a => 1.0
+  end
+
   def test_process_case
     case :a
     when :a
