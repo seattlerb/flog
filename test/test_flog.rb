@@ -186,13 +186,29 @@ class TestFlog < FlogTest
   end
 
   def test_process_call
-    sexp = s(:call, nil, :a)
+    sexp = s(:call, nil, :a)                                       # a
     assert_process sexp, 1.0, :a => 1.0
   end
 
-  def test_process_safe_call
-    sexp = s(:safe_call, nil, :a)
-    assert_process sexp, 1.0, :a => 1.0
+  def test_process_call2
+    sexp = s(:call, s(:call, nil, :a), :b)                         # a.b
+    assert_process sexp, 2.2, :a => 1.2, :b => 1.0
+  end
+
+  def test_process_call3
+    sexp = s(:call, s(:call, s(:call, nil, :a), :b), :c)           # a.b.c
+    assert_process sexp, 3.6, :a => 1.4, :b => 1.2, :c => 1.0
+  end
+
+  def test_process_safe_call2
+    sexp = s(:safe_call, s(:call, nil, :a), :b)                    # a&.b
+    assert_process sexp, 2.3, :a => 1.3, :b => 1.0
+  end
+
+  def test_process_safe_call3
+    sexp = s(:safe_call, s(:safe_call, s(:call, nil, :a), :b), :c) # a&.b&.c
+
+    assert_process sexp, 3.9, :a => 1.6, :b => 1.3, :c => 1.0
   end
 
   def test_process_case

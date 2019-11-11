@@ -401,7 +401,22 @@ class Flog < MethodBasedSexpProcessor
 
     s()
   end
-  alias :process_safe_call :process_call
+
+  def process_safe_call(exp)
+    penalize_by 0.3 do
+      process exp.shift # recv
+    end
+
+    name = exp.shift
+
+    penalize_by 0.2 do
+      process_until_empty exp
+    end
+
+    add_to_score name, SCORES[name]
+
+    s()
+  end
 
   def process_case(exp)
     add_to_score :branch
