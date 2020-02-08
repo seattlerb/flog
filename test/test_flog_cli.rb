@@ -1,4 +1,4 @@
-require "test/test_flog"
+require "test_flog"
 require "flog_cli"
 
 class FlogCLI
