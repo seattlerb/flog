@@ -39,6 +39,7 @@ class TestFlogCLI < FlogTest
       "--score"        => :score,
       "-t"             => [:threshold, "75", 0.75],
       "--threshold"    => [:threshold, "75", 0.75],
+      "--timeout"      => [:timeout, "60", 60],
       "-v"             => :verbose,
       "--verbose"      => :verbose,
       # TODO: (maybe)
