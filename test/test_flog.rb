@@ -135,7 +135,7 @@ class TestFlog < FlogTest
     bonus = case RUBY_VERSION
             when /^1\.8\.7/ then 0.4
             when /^1\.9/    then 0.3
-            when /^2\./     then 0.2
+            when /^[23]\./  then 0.2
             else raise "Unhandled version #{RUBY_VERSION}"
             end
 
@@ -166,7 +166,7 @@ class TestFlog < FlogTest
                    :lit_fixnum    =>  0.275,
                    :block_pass    =>  1.0,
                    :lambda        =>  1.0,
-                   :branch        =>  1.0,
+                   :block_call    =>  1.0,
                    :to_proc_icky! => 10.0)
   end
 
@@ -181,7 +181,7 @@ class TestFlog < FlogTest
                    :block_pass    =>  1.0,
                    :lambda        =>  1.0,
                    :assignment    =>  1.0,
-                   :branch        =>  1.0,
+                   :block_call    =>  1.0,
                    :to_proc_lasgn => 15.0)
   end
 
@@ -324,7 +324,7 @@ class TestFlog < FlogTest
              s(:call, nil, :loop), nil,
              s(:if, s(:true), s(:break), nil))
 
-    assert_process sexp, 2.326, :loop => 1.0, :branch => 2.1
+    assert_process sexp, 2.326, :loop => 1.0, :branch => 1.1, :block_call => 1
   end
 
   def test_process_iter_dsl
@@ -382,7 +382,7 @@ class TestFlog < FlogTest
              nil,
              s(:call, nil, :something))
 
-    assert_process sexp, 2.326, :something => 1.1, :task => 1.0, :branch => 1
+    assert_process sexp, 2.326, :something => 1.1, :task => 1.0, :block_call => 1
   end
 
   def test_process_iter_dsl_namespaced

@@ -38,6 +38,7 @@ class Flog < MethodBasedSexpProcessor
     :assignment     => 1,
     :block          => 1,
     :block_pass     => 1,
+    :block_call     => 1,
     :branch         => 1,
     :lit_fixnum     => 0.25,
     :sclass         => 5,
@@ -49,10 +50,10 @@ class Flog < MethodBasedSexpProcessor
                          2
                        when /^1\.9/ then
                          1.5
-                       when /^2\./ then
+                       when /^[23]\./ then
                          1
                        else
-                         5
+                         raise "Unhandled version #{RUBY_VERSION}"
                        end,
     :yield          => 1,
   }
@@ -288,7 +289,7 @@ class Flog < MethodBasedSexpProcessor
     tally.each do |cat, score|
       case cat
       when :assignment then a += score
-      when :branch     then b += score
+      when :branch, :block_call then b += score
       else                  c += score
       end
     end
@@ -493,7 +494,7 @@ class Flog < MethodBasedSexpProcessor
       end
     end
 
-    add_to_score :branch
+    add_to_score :block_call
 
     process exp.shift # no penalty for LHS
 
