@@ -515,7 +515,7 @@ class Flog < MethodBasedSexpProcessor
       # first/last
     when Integer, Rational then
       add_to_score :lit_fixnum
-    when Float, Symbol, Regexp, Range then
+    when Float, Symbol, Regexp, Range, Complex then
       # do nothing
     else
       raise "Unhandled lit: #{value.inspect}:#{value.class}"

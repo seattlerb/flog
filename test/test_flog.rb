@@ -437,6 +437,11 @@ class TestFlog < FlogTest
     assert_process sexp, 0.0
   end
 
+  def test_process_lit_complex
+    sexp = s(:lit, (0+1i))
+    assert_process sexp, 0.0
+  end
+
   def test_process_lit_bad
     assert_raises RuntimeError do
       @flog.process s(:lit, Object.new)
