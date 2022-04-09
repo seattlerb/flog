@@ -1,3 +1,13 @@
+=== 4.6.5 / 2022-04-09
+
+* 1 minor enhancement:
+
+  * Changed :iter scoring from branch to block_call (same score).
+
+* 1 bug fix:
+
+  * Fixed support for ruby 3 (only affected block_pass / to_proc_normal).
+
 === 4.6.4 / 2019-12-14
 
 * 2 minor enhancements:
