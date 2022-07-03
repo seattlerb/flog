@@ -157,6 +157,17 @@ class TestFlog < FlogTest
                    :block_pass     => 1.2)
   end
 
+  def test_process_block_pass__hash_wtf
+    sexp = s(:call, nil, :a,
+             s(:block_pass,
+               s(:hash, s(:lit, :a), s(:lit, :b))))
+
+    assert_process(sexp, 14.2,
+                   :a              => 1.0,
+                   :block_pass     => 1.2,
+                   :to_proc_icky!  => 12.0)
+  end
+
   def test_process_block_pass_iter
     sexp = s(:block_pass,
              s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1)))
