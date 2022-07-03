@@ -45,16 +45,6 @@ class Flog < MethodBasedSexpProcessor
     :super          => 1,
     :to_proc_icky!  => 10,
     :to_proc_lasgn  => 15,
-    :to_proc_normal => case RUBY_VERSION
-                       when /^1\.8\.7/ then
-                         2
-                       when /^1\.9/ then
-                         1.5
-                       when /^[23]\./ then
-                         1
-                       else
-                         raise "Unhandled version #{RUBY_VERSION}"
-                       end,
     :yield          => 1,
   }
 
@@ -370,8 +360,10 @@ class Flog < MethodBasedSexpProcessor
     case arg.sexp_type
     when :lvar, :dvar, :ivar, :cvar, :self, :const, :colon2, :nil then # f(&b)
       # do nothing
-    when :lit, :call then                                              # f(&:b)
-      add_to_score :to_proc_normal
+    when :lit then                                                     # f(&:b)
+      # do nothing -- this now costs about the same as a block
+    when :call then                                                    # f(&x.b)
+      # do nothing -- I don't like the indirection, but that's already scored
     when :lasgn then                                                   # f(&l=b)
       add_to_score :to_proc_lasgn
     when :iter, :dsym, :dstr, *BRANCHING then                          # below

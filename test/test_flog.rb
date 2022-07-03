@@ -127,25 +127,24 @@ class TestFlog < FlogTest
     assert_process sexp, 1.1, :branch => 1.1 # 10% penalty over process_and
   end
 
-  def test_process_block_pass
+  def test_process_block_pass__call
     sexp = s(:call, nil, :a,
              s(:block_pass,
                s(:call, nil, :b)))
 
-    bonus = case RUBY_VERSION
-            when /^1\.8\.7/ then 0.4
-            when /^1\.9/    then 0.3
-            when /^[23]\./  then 0.2
-            else raise "Unhandled version #{RUBY_VERSION}"
-            end
-
-    bonus += Flog::OTHER_SCORES[:to_proc_normal]
-
-    assert_process(sexp, 3.4 + bonus,
+    assert_process(sexp, 3.4,
                    :a              => 1.0,
                    :block_pass     => 1.2,
-                   :b              => 1.2,
-                   :to_proc_normal => 0.0 + bonus)
+                   :b              => 1.2)
+  end
+
+  def test_process_block_pass__to_proc
+    sexp = s(:call, nil, :a,
+             s(:block_pass, s(:lit, :to_i)))
+
+    assert_process(sexp, 2.2,
+                   :a              => 1.0,
+                   :block_pass     => 1.2)
   end
 
   def test_process_block_pass_colon2
