@@ -185,6 +185,13 @@ class TestFlog < FlogTest
                    :to_proc_lasgn => 15.0)
   end
 
+  def test_process_block_pass__nil
+    sexp = s(:block_pass)
+
+    assert_process(sexp, 1.0,
+                   :block_pass    =>  1.0)
+  end
+
   def test_process_call
     sexp = s(:call, nil, :a)                                       # a
     assert_process sexp, 1.0, :a => 1.0

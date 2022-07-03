@@ -365,6 +365,8 @@ class Flog < MethodBasedSexpProcessor
 
     add_to_score :block_pass
 
+    return s() unless arg
+
     case arg.sexp_type
     when :lvar, :dvar, :ivar, :cvar, :self, :const, :colon2, :nil then # f(&b)
       # do nothing
