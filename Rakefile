@@ -54,8 +54,11 @@ task :debug do
       exit 0
     end
     flog.flog file
-  else
+  elsif ruby
     flog.flog_ruby ruby, "-"
+    flog.calculate_total_scores
+  else
+    flog.flog
     flog.calculate_total_scores
   end
 
