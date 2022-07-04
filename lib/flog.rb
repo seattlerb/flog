@@ -166,9 +166,9 @@ class Flog < MethodBasedSexpProcessor
 
   def flog(*files)
     files.each do |file|
-      next unless file == '-' or File.readable? file
+      next unless file == "-" or File.readable? file
 
-      ruby = file == '-' ? $stdin.read : File.binread(file)
+      ruby = file == "-" ? $stdin.read : File.binread(file)
 
       flog_ruby ruby, file
     end
@@ -189,7 +189,7 @@ class Flog < MethodBasedSexpProcessor
     q = option[:quiet]
     if e.inspect =~ /<\%|%\>/ or ruby =~ /<\%|%\>/ then
       return if q
-      warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
+      warn "#{e.inspect} at #{e.backtrace.first(5).join(", ")}"
       warn "\n...stupid lemmings and their bad erb templates... skipping"
     else
       warn "ERROR: parsing ruby file #{file}" unless q
