@@ -617,7 +617,7 @@ class TestFlog < FlogTest
     @flog.calculate_total_scores
     @flog.calculate
 
-    assert_equal({ 'User#blah' => 'user.rb:3-4' }, @flog.method_locations)
+    assert_equal({ 'User#blah' => 'user.rb:3-5' }, @flog.method_locations)
     assert_equal({ "User#blah" => 2.2 }, @flog.totals)
     assert_in_epsilon(2.2, @flog.total_score)
     assert_in_epsilon(1.0, @flog.multiplier)
@@ -639,7 +639,7 @@ class TestFlog < FlogTest
     @flog.calculate_total_scores
     @flog.calculate
 
-    assert_equal({ 'Coder#happy?' => 'coder.rb:3-4' }, @flog.method_locations)
+    assert_equal({ 'Coder#happy?' => 'coder.rb:3-5' }, @flog.method_locations)
     assert_equal({ "Coder#happy?" => 1.0 }, @flog.totals)
     assert_in_epsilon(1.0, @flog.total_score)
     assert_in_epsilon(1.0, @flog.multiplier)
