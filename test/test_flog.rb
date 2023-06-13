@@ -44,7 +44,7 @@ class TestFlog < FlogTest
   def test_flog
     setup_flog
 
-    exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
+    exp = { "main#none" => { :+ => 1.0, :magic_number => 0.6 } }
     assert_equal exp, @flog.calls
 
     assert_in_epsilon 1.6, @flog.total_score unless @flog.option[:methods]
@@ -58,7 +58,7 @@ class TestFlog < FlogTest
     @flog.flog_ruby ruby, file
     @flog.calculate_total_scores
 
-    exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
+    exp = { "main#none" => { :+ => 1.0, :magic_number => 0.6 } }
     assert_equal exp, @flog.calls
 
     assert_in_epsilon 1.6, @flog.total_score unless @flog.option[:methods]
@@ -173,7 +173,7 @@ class TestFlog < FlogTest
              s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1)))
 
     assert_process(sexp, 12.316,
-                   :lit_fixnum    =>  0.275,
+                   :magic_number    =>  0.275,
                    :block_pass    =>  1.0,
                    :lambda        =>  1.0,
                    :block_call    =>  1.0,
@@ -187,7 +187,7 @@ class TestFlog < FlogTest
                s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1))))
 
     assert_process(sexp, 17.333,
-                   :lit_fixnum    =>  0.275,
+                   :magic_number    =>  0.275,
                    :block_pass    =>  1.0,
                    :lambda        =>  1.0,
                    :assignment    =>  1.0,
@@ -250,7 +250,7 @@ class TestFlog < FlogTest
              s(:colon2, s(:const, :X), :Y), nil,
              s(:scope, s(:lit, 42)))
 
-    assert_process sexp, 0.25, :lit_fixnum => 0.25
+    assert_process sexp, 0.25, :magic_number => 0.25
   end
 
   # TODO:
@@ -275,7 +275,7 @@ class TestFlog < FlogTest
                s(:block,
                  s(:lit, 42))))
 
-    assert_process sexp, 0.275, :lit_fixnum => 0.275
+    assert_process sexp, 0.275, :magic_number => 0.275
   end
 
   def test_process_defn_in_self
@@ -288,7 +288,7 @@ class TestFlog < FlogTest
     @flog.process sexp
     @flog.calculate_total_scores
 
-    exp = {'main::x' => {:lit_fixnum => 0.375}, 'main#none' => {:sclass => 5.0}}
+    exp = {'main::x' => {:magic_number => 0.375}, 'main#none' => {:sclass => 5.0}}
     assert_equal exp, @flog.calls
 
     assert_in_delta 5.375, @flog.total_score
@@ -305,7 +305,7 @@ class TestFlog < FlogTest
     @flog.process sexp
     @flog.calculate_total_scores
 
-    exp = {'main::x' => {:lit_fixnum => 0.375}, 'main#none' => {:sclass => 12.5}}
+    exp = {'main::x' => {:magic_number => 0.375}, 'main#none' => {:sclass => 12.5}}
     assert_equal exp, @flog.calls
 
     assert_in_delta 12.875, @flog.total_score
@@ -320,7 +320,7 @@ class TestFlog < FlogTest
                s(:block,
                  s(:lit, 42))))
 
-    assert_process sexp, 0.275, :lit_fixnum => 0.275
+    assert_process sexp, 0.275, :magic_number => 0.275
   end
 
   # FIX: huh? over-refactored?
@@ -386,7 +386,7 @@ class TestFlog < FlogTest
 
     @klass, @meth = "task", "#woot"
 
-    assert_process sexp, 2.3, :something => 1.0, :task => 1.0, :lit_fixnum => 0.3
+    assert_process sexp, 2.3, :something => 1.0, :task => 1.0, :magic_number => 0.3
   end
 
   def test_process_iter_dsl_hash_when_hash_empty
@@ -423,7 +423,7 @@ class TestFlog < FlogTest
     hash  = {
       "namespace(blah)::task#woot" => {
         :something  => 1.0,
-        :lit_fixnum => 0.3,
+        :magic_number => 0.3,
         :task       => 1.0,
       },
       "namespace#blah" => {
@@ -446,12 +446,27 @@ class TestFlog < FlogTest
 
   def test_process_lit_int
     sexp = s(:lit, 42)
-    assert_process sexp, 0.25, :lit_fixnum => 0.25
+    assert_process sexp, 0.25, :magic_number => 0.25
+  end
+
+  def test_process_lit_int__const
+    sexp = s(:cdecl, :X, s(:lit, 42))
+    assert_process sexp, 0.0
   end
 
   def test_process_lit_float # and other lits
-    sexp = s(:lit, 3.1415) # TODO: consider penalizing floats if not in cdecl
+    sexp = s(:lit, 3.1415)
+    assert_process sexp, 0.25, :magic_number => 0.25
+  end
+
+  def test_process_lit_float__const
+    sexp = s(:cdecl, :X, s(:lit, 3.1415))
     assert_process sexp, 0.0
+  end
+
+  def test_process_lit_complex
+    sexp = s(:lit, (0+1i))
+    assert_process sexp, 0.25
   end
 
   def test_process_lit_bad
@@ -475,12 +490,12 @@ class TestFlog < FlogTest
              s(:colon2, s(:const, :X), :Y),
              s(:scope, s(:lit, 42)))
 
-    assert_process sexp, 0.25, :lit_fixnum => 0.25
+    assert_process sexp, 0.25, :magic_number => 0.25
   end
 
   def test_process_sclass
     sexp = s(:sclass, s(:self), s(:scope, s(:lit, 42)))
-    assert_process sexp, 5.375, :sclass => 5.0, :lit_fixnum => 0.375
+    assert_process sexp, 5.375, :sclass => 5.0, :magic_number => 0.375
   end
 
   def test_process_super
@@ -488,7 +503,7 @@ class TestFlog < FlogTest
     assert_process sexp, 1.0, :super => 1.0
 
     sexp = s(:super, s(:lit, 42))
-    assert_process sexp, 1.25, :super => 1.0, :lit_fixnum => 0.25
+    assert_process sexp, 1.25, :super => 1.0, :magic_number => 0.25
   end
 
   def test_process_while
@@ -505,10 +520,10 @@ class TestFlog < FlogTest
     assert_process sexp, 1.00, :yield => 1.0
 
     sexp = s(:yield, s(:lit, 4))
-    assert_process sexp, 1.25, :yield => 1.0, :lit_fixnum => 0.25
+    assert_process sexp, 1.25, :yield => 1.0, :magic_number => 0.25
 
     sexp = s(:yield, s(:lit, 42), s(:lit, 24))
-    assert_process sexp, 1.50, :yield => 1.0, :lit_fixnum => 0.50
+    assert_process sexp, 1.50, :yield => 1.0, :magic_number => 0.50
   end
 
   def test_score_method

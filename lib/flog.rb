@@ -40,7 +40,7 @@ class Flog < MethodBasedSexpProcessor
     :block_pass     => 1,
     :block_call     => 1,
     :branch         => 1,
-    :lit_fixnum     => 0.25,
+    :magic_number   => 0.25,
     :sclass         => 5,
     :super          => 1,
     :to_proc_icky!  => 10,
@@ -508,9 +508,9 @@ class Flog < MethodBasedSexpProcessor
     when 0, -1 then
       # ignore those because they're used as array indicies instead of
       # first/last
-    when Integer, Rational then
-      add_to_score :lit_fixnum
-    when Float, Symbol, Regexp, Range then
+    when Integer, Float, Rational, Complex then
+      add_to_score :magic_number unless context[1] == :cdecl
+    when Symbol, Regexp, Range then
       # do nothing
     else
       raise "Unhandled lit: #{value.inspect}:#{value.class}"

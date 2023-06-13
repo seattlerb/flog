@@ -135,7 +135,7 @@ class TestFlogCLI < FlogTest
 
     expected = "\n     1.6: main#none
      1.0:   +
-     0.6:   lit_fixnum
+     0.6:   magic_number
 
 "
 
@@ -165,7 +165,7 @@ class TestFlogCLI < FlogTest
 
     @flog.flog "-"
 
-    exp = { "main#none" => { :+ => 1.0, :lit_fixnum => 0.6 } }
+    exp = { "main#none" => { :+ => 1.0, :magic_number => 0.6 } }
     assert_equal exp, @flog.calls
 
     @flog.option[:all] = true
