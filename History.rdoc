@@ -1,3 +1,11 @@
+=== 4.7.0 / 2023-07-18
+
+* 3 minor enhancements:
+
+  * Extend flog to process complex numbers. (petergoldstein)
+  * Only penalize magic numbers if they're not assigned to a const (excludes 0/-1).
+  * Renamed :lit_fixnum to :magic_number.
+
 === 4.6.6 / 2022-07-03
 
 * 1 minor enhancement:
