@@ -13,13 +13,13 @@ class FlogCLI
   def_delegators :@flog, :threshold, :total_score, :no_method, :calculate_total_scores
   def_delegators :@flog, :max_method
 
-  def self.run args = ARGV
+  def self.run args = ARGV, extra = {}
     load_plugins
 
     expander = PathExpander.new args, "**/*.{rb,rake}"
     files = expander.process
 
-    options = parse_options args
+    options = parse_options args, extra
 
     abort "no files or stdin (-) to process, aborting." if
       files.empty? and args.empty?
@@ -66,12 +66,12 @@ class FlogCLI
   ##
   # Parse options in +args+ (defaults to ARGV).
 
-  def self.parse_options args = ARGV
+  def self.parse_options args = ARGV, extra_options = {}
     option = {
       :quiet    => false,
       :continue => false,
       :parser   => RubyParser,
-    }
+    }.merge extra_options
 
     OptionParser.new do |opts|
       opts.separator "Standard options:"

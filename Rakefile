@@ -40,17 +40,19 @@ task :debug do
   file = ENV["F"]
   ruby = ENV["R"]
   details = ENV["D"]
+  continue = ENV["C"]
 
   flog = FlogCLI.new :parser => RubyParser
 
   flog.option[:details] = true if details
+  flog.option[:continue] = true if continue
 
   if file then
     if File.directory? file then # quick hack to get directory scanning going
       argv = [file]
       argv.unshift "-v" if ENV["V"]
 
-      FlogCLI.run argv
+      FlogCLI.run argv, flog.option
       exit 0
     end
     flog.flog file
