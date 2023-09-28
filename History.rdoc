@@ -1,3 +1,14 @@
+=== 4.8.0 / 2023-09-28
+
+* 2 minor enhancements:
+
+  * Added ability to pass down option overrides through Flog.run.
+  * Removed ancient File.binread alias.
+
+* 1 bug fix:
+
+  * Added missing rdoc.
+
 === 4.7.0 / 2023-07-18
 
 * 3 minor enhancements:
