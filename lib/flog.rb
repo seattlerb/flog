@@ -2,6 +2,15 @@ require "sexp_processor"
 require "ruby_parser"
 require "timeout"
 
+##
+# Flog is a SexpProcessor that calculates a ABC (assignments,
+# branches, conditionals) complexity metric with some ruby-aware
+# enhancements and a compounding penalty for increasing depth.
+#
+# In essence, this calculates the most tortured code. The higher the
+# score, the more pain the code is in and the harder it is to
+# thoroughly test.
+
 class Flog < MethodBasedSexpProcessor
   VERSION = "4.7.0" # :nodoc:
 

@@ -5,6 +5,10 @@ require "forwardable"
 require "path_expander"
 require "flog"
 
+##
+# This is the CLI interface for Flog, responsible for processing
+# options, finding files, loading plugins, and reporting results.
+
 class FlogCLI
   extend Forwardable
 
@@ -12,6 +16,9 @@ class FlogCLI
   def_delegators :@flog, :method_locations, :method_scores, :reset, :scores
   def_delegators :@flog, :threshold, :total_score, :no_method, :calculate_total_scores
   def_delegators :@flog, :max_method
+
+  ##
+  # This kicks off the whole thing.
 
   def self.run args = ARGV, extra = {}
     load_plugins

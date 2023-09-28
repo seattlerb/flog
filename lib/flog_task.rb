@@ -1,5 +1,9 @@
 require 'rake/tasklib'
 
+##
+# A rake front-end for flog, allowing task creation with options for
+# verbosity, reporting, and a failure threshold.
+
 class FlogTask < Rake::TaskLib
   ##
   # The name of the task. Defaults to :flog
