@@ -2,14 +2,6 @@ require "sexp_processor"
 require "ruby_parser"
 require "timeout"
 
-class File
-  RUBY19 = "<3".respond_to? :encoding unless defined? RUBY19 # :nodoc:
-
-  class << self
-    alias :binread :read unless RUBY19
-  end
-end
-
 class Flog < MethodBasedSexpProcessor
   VERSION = "4.7.0" # :nodoc:
 
