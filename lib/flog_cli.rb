@@ -138,6 +138,10 @@ class FlogCLI
         option[:verbose] = true
       end
 
+      opts.on("--timeout=N", Integer, "Set the timeout (in sec) for parsing (default: 10s)") do |n|
+        option[:timeout] = n
+      end
+
       next if self.plugins.empty?
       opts.separator "Plugin options:"
 

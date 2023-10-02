@@ -22,6 +22,11 @@ class Flog < MethodBasedSexpProcessor
   THRESHOLD = DEFAULT_THRESHOLD # :nodoc:
 
   ##
+  # Timeout in seconds, can be set with --timeout.
+
+  DEFAULT_TIMEOUT = 10
+
+  ##
   # The scoring system hash. Maps node type to score.
 
   SCORES = Hash.new 1
@@ -93,6 +98,7 @@ class Flog < MethodBasedSexpProcessor
   attr_reader :method_scores, :scores
   attr_reader :total_score, :totals
   attr_writer :threshold
+  attr_reader :timeout
 
   # :startdoc:
 
@@ -182,8 +188,8 @@ class Flog < MethodBasedSexpProcessor
   # for methods. Smart. Handles syntax errors and timeouts so you
   # don't have to.
 
-  def flog_ruby ruby, file="-", timeout = 10
-    flog_ruby! ruby, file, timeout
+  def flog_ruby ruby, file="-", timeout_override = nil
+    flog_ruby! ruby, file, timeout_override || timeout
   rescue Timeout::Error
     warn "TIMEOUT parsing #{file}. Skipping."
   rescue RubyParser::SyntaxError, Racc::ParseError => e
@@ -208,12 +214,12 @@ class Flog < MethodBasedSexpProcessor
   # Flog the given ruby source, optionally using file to provide paths for
   # methods. Does not handle timeouts or syntax errors. See #flog_ruby.
 
-  def flog_ruby! ruby, file="-", timeout = 10
+  def flog_ruby! ruby, file="-", timeout_override = nil
     @parser = (option[:parser] || RubyParser).new
 
     warn "** flogging #{file}" if option[:verbose]
 
-    ast = @parser.process ruby, file, timeout
+    ast = @parser.process ruby, file, timeout_override ||timeout
 
     return unless ast
 
@@ -230,6 +236,7 @@ class Flog < MethodBasedSexpProcessor
     @mass                = {}
     @parser              = nil
     @threshold           = option[:threshold] || DEFAULT_THRESHOLD
+    @timeout             = option[:timeout] || DEFAULT_TIMEOUT
     self.auto_shift_type = true
     self.reset
   end
