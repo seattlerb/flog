@@ -1,0 +1,25 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    hoe (4.2.3)
+      rake (>= 0.8, < 15.0)
+    minitest (5.25.5)
+    path_expander (1.1.3)
+    prism (1.4.0)
+    rake (13.2.1)
+    sexp_processor (4.17.3)
+
+PLATFORMS
+  ruby
+  x86_64-linux-gnu
+
+DEPENDENCIES
+  hoe
+  minitest
+  path_expander
+  prism
+  rake
+  sexp_processor
+
+BUNDLED WITH
+   2.6.9

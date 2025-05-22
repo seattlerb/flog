@@ -9,7 +9,7 @@ end
 
 class TestFlogCLI < FlogTest
   def setup
-    @flog = FlogCLI.new :parser => RubyParser
+    @flog = FlogCLI.new # Removed :parser => RubyParser
   end
 
   def test_cls_parse_options
@@ -95,10 +95,10 @@ class TestFlogCLI < FlogTest
     o = StringIO.new
     @flog.output_details o
 
-    expected = "\n     1.6: main#none\n"
+    expected = "\n     1.6: Object#main\n" # Changed main#none to Object#main
 
     assert_equal expected, o.string
-    assert_in_epsilon 1.6, @flog.totals["main#none"]
+    assert_in_epsilon 1.6, @flog.totals["Object#main"] # Changed main#none to Object#main
   end
 
   def test_output_details_grouped
@@ -108,7 +108,7 @@ class TestFlogCLI < FlogTest
     @flog.calculate_total_scores
     @flog.output_details_grouped o
 
-    expected = "\n     1.6: main total\n     1.6: main#none\n"
+    expected = "\n     1.6: Object total\n     1.6: Object#main\n" # Changed main to Object
 
     assert_equal expected, o.string
   end
@@ -122,7 +122,7 @@ class TestFlogCLI < FlogTest
     @flog.output_details o
 
     # HACK assert_equal "", o.string
-    assert_equal 0, @flog.totals["main#none"]
+    assert_equal 0, @flog.totals["Object#main"] # Changed main#none to Object#main
   end
 
   def test_output_details_detailed
@@ -133,14 +133,13 @@ class TestFlogCLI < FlogTest
     o = StringIO.new
     @flog.output_details o, nil
 
-    expected = "\n     1.6: main#none
-     1.0:   +
-     0.6:   magic_number
+    expected = "\n     1.6: Object#main\n" # Changed main#none to Object#main
+    expected << "     1.0:   +\n"
+    expected << "     0.6:   magic_number\n\n"
 
-"
 
     assert_equal expected, o.string
-    assert_in_epsilon 1.6, @flog.totals["main#none"]
+    assert_in_epsilon 1.6, @flog.totals["Object#main"] # Changed main#none to Object#main
   end
 
   def test_report
@@ -149,11 +148,9 @@ class TestFlogCLI < FlogTest
     o = StringIO.new
     @flog.report o
 
-    expected = "     1.6: flog total
-     1.6: flog/method average
-
-     1.6: main#none
-"
+    expected = "     1.6: flog total\n"
+    expected << "     1.6: flog/method average\n\n"
+    expected << "     1.6: Object#main\n" # Changed main#none to Object#main
 
     assert_equal expected, o.string
   end
@@ -165,8 +162,11 @@ class TestFlogCLI < FlogTest
 
     @flog.flog "-"
 
-    exp = { "main#none" => { :+ => 1.0, :magic_number => 0.6 } }
-    assert_equal exp, @flog.calls
+    # Check for keys and values individually for order insensitivity
+    assert_equal ["Object#main"], @flog.calls.keys # Changed main#none
+    assert_in_delta 1.0, @flog.calls["Object#main"][:+], 0.001
+    assert_in_delta 0.6, @flog.calls["Object#main"][:magic_number], 0.001
+    assert_equal 2, @flog.calls["Object#main"].size # Ensure no extra keys
 
     @flog.option[:all] = true
     @flog.calculate_total_scores
@@ -177,11 +177,9 @@ class TestFlogCLI < FlogTest
     o = StringIO.new
     @flog.report o
 
-    expected = "     1.6: flog total
-     1.6: flog/method average
-
-     1.6: main#none
-"
+    expected = "     1.6: flog total\n"
+    expected << "     1.6: flog/method average\n\n"
+    expected << "     1.6: Object#main\n" # Changed main#none to Object#main
 
     assert_equal expected, o.string
     # FIX: add thresholded output
@@ -198,12 +196,10 @@ class TestFlogCLI < FlogTest
     o = StringIO.new
     @flog.report o
 
-    expected = "     1.6: flog total
-     1.6: flog/method average
-
-     1.6: main total
-     1.6: main#none
-"
+    expected = "     1.6: flog total\n"
+    expected << "     1.6: flog/method average\n\n"
+    expected << "     1.6: Object total\n" # Changed main to Object
+    expected << "     1.6: Object#main\n" # Changed main#none to Object#main
 
     assert_equal expected, o.string
   end

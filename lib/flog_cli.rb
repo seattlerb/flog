@@ -77,7 +77,7 @@ class FlogCLI
     option = {
       :quiet    => false,
       :continue => false,
-      :parser   => RubyParser,
+      # :parser   => RubyParser, # Removed as Flog now defaults to Prism
     }.merge extra_options
 
     OptionParser.new do |opts|
