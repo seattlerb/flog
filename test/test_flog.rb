@@ -697,3 +697,15 @@ class TestFlog < FlogTest
     @flog.add_to_score "blah", 42
   end
 end
+
+class TestFlogDefaultOptions < Minitest::Test
+  def test_flog_with_default_options
+    # Regression test for issue #84
+    # Flog should work with default options (no explicit parser)
+    flog = Flog.new
+    flog.flog_ruby "2 + 3", "test.rb"
+    flog.calculate_total_scores
+
+    assert_in_epsilon 1.6, flog.total_score
+  end
+end

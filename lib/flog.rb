@@ -233,8 +233,8 @@ class Flog < MethodBasedSexpProcessor
     @option              = option.dup
     @mass                = {}
     @parser              = nil
-    @threshold           = option[:threshold] || DEFAULT_THRESHOLD
-    option[:parser]    ||= NotRubyParser
+    @threshold           = @option[:threshold] || DEFAULT_THRESHOLD
+    @option[:parser]   ||= NotRubyParser
     self.auto_shift_type = true
     self.reset
   end
