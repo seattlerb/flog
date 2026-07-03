@@ -375,7 +375,7 @@ class Flog < MethodBasedSexpProcessor
       # do nothing
     when :lit then                                                     # f(&:b)
       # do nothing -- this now costs about the same as a block
-    when :call then                                                    # f(&x.b)
+    when :call, :safe_call then                                        # f(&x.b) / f(&x&.b)
       # do nothing -- I don't like the indirection, but that's already scored
     when :lasgn then                                                   # f(&l=b)
       add_to_score :to_proc_lasgn

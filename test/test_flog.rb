@@ -138,6 +138,18 @@ class TestFlog < FlogTest
                    :b              => 1.2)
   end
 
+  def test_process_block_pass__safe_call
+    sexp = s(:call, nil, :a,
+             s(:block_pass,
+               s(:safe_call, s(:call, nil, :b), :c)))             # a(&b&.c)
+
+    assert_process(sexp, 4.9,
+                   :a              => 1.0,
+                   :block_pass     => 1.2,
+                   :b              => 1.5,
+                   :c              => 1.2)
+  end
+
   def test_process_block_pass__to_proc
     sexp = s(:call, nil, :a,
              s(:block_pass, s(:lit, :to_i)))
