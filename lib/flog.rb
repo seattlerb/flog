@@ -9,6 +9,10 @@ class Prism::Translation::RubyParser
     def visit_it_local_variable_read_node(node) # TODO: upstream
       s(node, :lvar, :it)
     end
+
+    def visit_local_variable_read_node(node)
+      s(node, :lvar, node.name)
+    end
   end
   Compiler.prepend TweakIt
 end

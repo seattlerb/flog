@@ -355,6 +355,17 @@ class TestFlog < FlogTest
     assert_process sexp, 2.326, blah: 1, block_call: 1, puts: 1.1
   end
 
+  def test_process_iter__lvar__1
+    ruby = "blah { puts _1 }"
+    sexp = s(:iter,
+             s(:call, nil, :blah), 0,
+             s(:call, nil, :puts, s(:lvar, :_1)))
+
+    assert_parse sexp, ruby
+
+    assert_process sexp, 2.326, blah: 1, block_call: 1, puts: 1.1
+  end
+
   def test_process_iter_dsl
     # task :blah do
     #   something
