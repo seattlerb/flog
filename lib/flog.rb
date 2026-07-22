@@ -383,12 +383,13 @@ class Flog < MethodBasedSexpProcessor
       # do nothing -- I don't like the indirection, but that's already scored
     when :lasgn then                                                   # f(&l=b)
       add_to_score :to_proc_lasgn
-    when :iter, :dsym, :dstr, :hash, *BRANCHING then                   # below
+    when :iter, :dsym, :dstr, :hash, :safe_call, *BRANCHING then       # below
       # f(&proc { ... })
       # f(&"#{...}")
       # f(&:"#{...}")
       # f(&if ... then ... end") and all other branching forms
       # f(&{ a: 42 })  WHY?!?
+      # f(&obj&.meth)  WHY?!?
       add_to_score :to_proc_icky!
     else
       raise({:block_pass_even_ickier! => arg}.inspect)
