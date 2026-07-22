@@ -3,6 +3,21 @@ require "flog"
 
 class Flog
   attr_writer :calls
+
+  class NotRubyParser # TODO: remove once upstreamed
+    attr_accessor :scopes
+
+    def initialize scopes:nil
+      super()
+      self.scopes = [scopes] if scopes
+    end
+
+    # overridden from prism to add scopes arg
+    def parse(source, filepath = "(string)")
+      translate(Prism.parse(source, filepath:, partial_script: true, scopes:), filepath)
+    end
+  end
+
 end
 
 class FlogTest < Minitest::Test
@@ -215,6 +230,42 @@ class TestFlog < FlogTest
   def test_process_call3
     sexp = s(:call, s(:call, s(:call, nil, :a), :b), :c)           # a.b.c
     assert_process sexp, 3.6, :a => 1.4, :b => 1.2, :c => 1.0
+  end
+
+  def test_process_call__block_arg # a(&b)
+    ruby = "a(&b)"
+    sexp = s(:call, nil, :a, s(:block_pass, s(:lvar, :b)))
+
+    assert_parse sexp, ruby
+
+    assert_process(sexp, 2.2,
+                   :a          => 1,
+                   :block_pass => 1.2)
+  end
+
+  def test_process_call__block_arg_call  # a(&b.c)
+    ruby = "a(&b.c)"
+    sexp = s(:call, nil, :a, s(:block_pass, s(:call, s(:lvar, :b), :c)))
+
+    assert_parse sexp, ruby
+
+    assert_process(sexp, 3.4,
+                   :a          => 1,
+                   :c          => 1.2,
+                   :block_pass => 1.2)
+  end
+
+  def test_process_call__block_arg_safe_call # a(&b&.c)
+    ruby = "a(&b&.c)"
+    sexp = s(:call, nil, :a, s(:block_pass, s(:safe_call, s(:lvar, :b), :c)))
+
+    assert_parse sexp, ruby
+
+    assert_process(sexp, 15.40,
+                   :a             => 1,
+                   :block_pass    => 1.2,
+                   :c             => 1.2,
+                   :to_proc_icky! => 12)
   end
 
   def test_process_safe_call2
@@ -586,7 +637,7 @@ class TestFlog < FlogTest
   end
 
   def assert_hash_in_epsilon exp, act
-    assert_equal exp.keys.sort_by(&:to_s), act.keys.sort_by(&:to_s)
+    assert_equal exp.keys.sort, act.keys.sort
 
     exp.keys.each do |k|
       assert_in_epsilon exp[k], act[k], 0.001, "key = #{k.inspect}"
@@ -594,7 +645,9 @@ class TestFlog < FlogTest
   end
 
   def assert_parse sexp, ruby
-    assert_equal sexp, Flog::NotRubyParser.new.process(ruby)
+    parser = Flog::NotRubyParser.new scopes: %i[a b c d]
+
+    assert_equal sexp, parser.process(ruby)
   end
 
   def assert_process sexp, score = -1, hash = {}
