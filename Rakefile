@@ -9,7 +9,7 @@ Hoe.add_include_dirs("../../sexp_processor/dev/lib",
                      "lib")
 
 Hoe.plugin :seattlerb
-Hoe.plugin :isolate
+Hoe.plugin :isolate_binaries
 Hoe.plugin :rdoc
 Hoe.plugin :bundler
 
@@ -22,7 +22,7 @@ Hoe.spec 'flog' do
   license "MIT"
 
   dependency "sexp_processor", "~> 4.8"
-  dependency "prism",          "~> 1.7"
+  dependency "prism",         [">= 1.9", "< 3"]
   dependency "path_expander",  "~> 2.0"
 end
 
