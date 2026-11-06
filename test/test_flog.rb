@@ -396,6 +396,8 @@ class TestFlog < FlogTest
   end
 
   def test_process_iter__it
+    skip "n/a" if RUBY_VERSION < "3.4"
+
     ruby = "blah { puts it }"
     sexp = s(:iter,
              s(:call, nil, :blah), 0,
