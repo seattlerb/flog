@@ -103,6 +103,26 @@ class TestFlog < FlogTest
     assert_in_epsilon 1, @flog.multiplier
   end
 
+  def test_penalize_by__underflow_does_not_change_score
+    assert_equal 1.0, @flog.multiplier # floats=immediates, so equal will work
+
+    n = 1000
+    compound_penalty = -> {
+      @flog.penalize_by 0.1 do
+        n -= 1
+        if n.zero? then
+          assert_in_epsilon 101, @flog.multiplier
+        else
+          compound_penalty.call
+        end
+      end
+    }
+
+    compound_penalty.call
+
+    assert_equal 1.0, @flog.multiplier
+  end
+
   def test_process_alias
     sexp = s(:alias, s(:lit, :a), s(:lit, :b))
 

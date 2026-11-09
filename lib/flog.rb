@@ -266,14 +266,14 @@ class Flog < MethodBasedSexpProcessor
 
   ##
   # For the duration of the block the complexity factor is increased
-  # by #bonus This allows the complexity of sub-expressions to be
-  # influenced by the expressions in which they are found.  Yields 42
-  # to the supplied block.
+  # by #bonus. This allows the complexity of sub-expressions to be
+  # influenced by the expressions in which they are found.
 
   def penalize_by bonus
+    old = @multiplier
     @multiplier += bonus
     yield
-    @multiplier -= bonus
+    @multiplier = old
   end
 
   ##
