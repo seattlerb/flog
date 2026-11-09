@@ -29,10 +29,16 @@ report. The higher the score, the more pain the code is in.
         53.7: Flog#parse_options
     ...
 
+== AI Policy:
+
+AI is not allowed. Not in PRs, not in issues... just NO. See {my AI
+policy}[https://zenspider.com/ruby/2026/07/my-ai-policy.html] for more
+details. If it "smells of AI", it will be rejected.
+
 == REQUIREMENTS:
 
 * ruby2ruby (soft dependency: only for -v)
-* ruby_parser
+* prism (can also still use ruby_parser with --legacy, but why??)
 * path_expander
 
 == INSTALL:
