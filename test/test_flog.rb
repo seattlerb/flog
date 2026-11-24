@@ -123,6 +123,61 @@ class TestFlog < FlogTest
     assert_equal 1.0, @flog.multiplier
   end
 
+  def test_process__iter_lasgn
+    # x = Hash.new { |h, k| h[k] = 1.0 }
+    sexp = s(:lasgn, :x,
+             s(:iter, s(:call, s(:const, :Hash), :new), s(:args, :h, :k),
+               s(:attrasgn, s(:lvar, :h), :[]=, s(:lvar, :k), s(:lit, 1.0))))
+
+    assert_process(sexp, 2.65,
+                   block_call: 1.0, new: 1.0, assignment: 2.1, magic_number: 0.275)
+  end
+
+  def test_process__iter_cdecl
+    # X = Hash.new { |h, k| h[k] = 1.0 }
+    sexp = s(:cdecl, :X,
+             s(:iter, s(:call, s(:const, :Hash), :new), s(:args, :h, :k),
+               s(:attrasgn, s(:lvar, :h), :[]=, s(:lvar, :k), s(:lit, 1.0))))
+
+    @klass = "X"
+    assert_process(sexp, 2.65,
+                   block_call: 1.0, new: 1.0, assignment: 2.1, magic_number: 0.275)
+  end
+
+  def test_process__iter_cdecl_methods
+    ruby = <<~RUBY
+      module A
+        B = Data.define(:b) do
+          def to_s = ""
+        end
+
+        C = Struct.new(:c) do
+          def to_s = ""
+        end
+      end
+    RUBY
+
+    sexp = s(:module, :A,
+             s(:cdecl, :B,
+               s(:iter, s(:call, s(:const, :Data), :define, s(:lit, :b)), 0,
+                 s(:defn, :to_s, s(:args), s(:str, "")))),
+             s(:cdecl, :C,
+               s(:iter, s(:call, s(:const, :Struct), :new, s(:lit, :c)), 0,
+                 s(:defn, :to_s, s(:args), s(:str, "")))))
+
+    sexp = assert_parse sexp, ruby # now with line numbers!
+
+    assert_process(sexp, 3.464,
+                   "A::B#none" => {assignment: 1.0, block_call: 1.0, define: 1.0},
+                   "A::C#none" => {assignment: 1.0, block_call: 1.0, new: 1.0})
+
+    exp = {
+      "A::B#to_s" => "file.rb:3-3",
+      "A::C#to_s" => "file.rb:7-7",
+    }
+    assert_equal exp, @flog.method_locations
+  end
+
   def test_process_alias
     sexp = s(:alias, s(:lit, :a), s(:lit, :b))
 
@@ -546,7 +601,7 @@ class TestFlog < FlogTest
 
   def test_process_lit_int__const
     sexp = s(:cdecl, :X, s(:lit, 42))
-    assert_process sexp, 0.0
+    assert_process sexp, 1.0
   end
 
   def test_process_lit_float # and other lits
@@ -556,7 +611,7 @@ class TestFlog < FlogTest
 
   def test_process_lit_float__const
     sexp = s(:cdecl, :X, s(:lit, 3.1415))
-    assert_process sexp, 0.0
+    assert_process sexp, 1.0
   end
 
   def test_process_lit_complex
@@ -669,7 +724,9 @@ class TestFlog < FlogTest
   def assert_parse sexp, ruby
     parser = Flog::NotRubyParser.new scopes: %i[a b c d]
 
-    assert_equal sexp, parser.process(ruby)
+    act = parser.process ruby, "file.rb"
+    assert_equal sexp, act
+    act
   end
 
   def assert_process sexp, score = -1, hash = {}
@@ -683,8 +740,10 @@ class TestFlog < FlogTest
       key = "#{@klass}#{@meth}"
       act = @flog.calls
 
-      assert_equal [key], act.keys.sort
-      assert_hash_in_epsilon hash, act[key]
+      # cheat?
+      hash = { key => hash } if hash.keys.all? { |x| Symbol === x }
+
+      assert_equal hash, act # also cheat: needs recursive assert_hash_in_epsilon
     end
 
     @flog.calculate_total_scores

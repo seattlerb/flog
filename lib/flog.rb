@@ -295,9 +295,9 @@ class Flog < MethodBasedSexpProcessor
     a, b, c = 0, 0, 0
     tally.each do |cat, score|
       case cat
-      when :assignment then a += score
+      when :assignment          then a += score
       when :branch, :block_call then b += score
-      else                  c += score
+      else                           c += score
       end
     end
     Math.sqrt(a*a + b*b + c*c)
@@ -438,6 +438,23 @@ class Flog < MethodBasedSexpProcessor
     penalize_by 0.1 do
       process_until_empty exp
     end
+    s()
+  end
+
+  def process_cdecl exp
+    name = exp.shift
+    val  = exp.shift
+
+    if val.sexp_type == :iter then # eg X = Class.new do ... end
+      in_klass name do
+        add_to_score :assignment # inside in_klass keeps distance correct
+        process val
+      end
+    else
+      add_to_score :assignment
+      process val
+    end
+
     s()
   end
 
