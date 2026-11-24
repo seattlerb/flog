@@ -186,7 +186,7 @@ class Flog < MethodBasedSexpProcessor
 
       ruby = file == "-" ? $stdin.read : File.binread(file)
 
-      flog_ruby ruby, file
+      flog_ruby ruby, file, option[:timeout]
     end
 
     calculate_total_scores

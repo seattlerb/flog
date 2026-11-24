@@ -78,6 +78,7 @@ class FlogCLI
       :quiet    => false,
       :continue => false,
       :parser   => nil,
+      :timeout  => 10,
     }.merge extra_options
 
     OptionParser.new do |opts|
@@ -141,6 +142,10 @@ class FlogCLI
 
       opts.on("-v", "--verbose", "Display progress during processing.") do
         option[:verbose] = true
+      end
+
+      opts.on("--timeout=N", Float, "Set the timeout (in sec) for parsing (default: 10s)") do |n|
+        option[:timeout] = n
       end
 
       next if self.plugins.empty?
