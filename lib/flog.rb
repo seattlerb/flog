@@ -27,7 +27,7 @@ end
 # thoroughly test.
 
 class Flog < MethodBasedSexpProcessor
-  VERSION = "4.9.4" # :nodoc:
+  VERSION = "4.10.0" # :nodoc:
 
   NotRubyParser = Class.new Prism::Translation::RubyParser # compatibility layer :nodoc:
 

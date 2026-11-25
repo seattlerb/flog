@@ -1,3 +1,17 @@
+=== 4.10.0 / 2026-11-25
+
+* 1 minor enhancement:
+
+  * Added --timeout=<n> flag. (olbrich)
+
+* 5 bug fixes:
+
+  * Bump prism version to include 2.x.
+  * Fix #penalize_by to avoid round-off errors processing deeply nested code. (ThaSMorato)
+  * Fixed lvar processing for _1, _2, etc.
+  * Fixed processing of absolutely bonkers `call(&obj&.method)` construct.
+  * Fixed scoring of const assignments to be counted as a namespace. (chrobo)
+
 === 4.9.4 / 2026-01-06
 
 * 2 bug fixes:
